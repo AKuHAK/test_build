@@ -7,8 +7,5 @@ deploy:
     
 sudo: required
 
-install:
-- bundle install
 script:
-- bundle exec rake
 - echo "# test_build" >> test.txt
