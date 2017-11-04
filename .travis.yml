@@ -5,3 +5,4 @@ deploy:
   on:
     branch: master
     
+- echo "# test_build" >> test.txt
