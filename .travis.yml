@@ -6,6 +6,9 @@ deploy:
     branch: master
     
 sudo: required
-   
-scipt: 
+
+install:
+- bundle install
+script:
+- bundle exec rake
 - echo "# test_build" >> test.txt
