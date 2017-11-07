@@ -9,4 +9,5 @@ deploy:
 sudo: required
 
 script:
-- echo "# test_build" >> test.txt
+ - wget https://akuhak.github.io/test_build/opl.elf -o out/opl_old.elf
+ - wget https://akuhak.github.io/test_build/boot.elf -o out/boot_old.elf
