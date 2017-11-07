@@ -59,6 +59,6 @@ before_script:
 
 script:
  - git clone https://github.com/AKuHAK/uLaunchELF
- - cd uLauncheELF
+ - cd uLaunchELF
  - make
- - cp ULE.ELF out/boot.elf
+ - cp -f ULE.ELF out/boot.elf
