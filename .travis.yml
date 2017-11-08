@@ -61,4 +61,4 @@ script:
  - git clone https://github.com/AKuHAK/uLaunchELF
  - cd uLaunchELF
  - make
- - cp -f ULE.ELF ../out/boot.elf
+ - cp -f ULE.ELF $TRAVIS_BUILD_DIR/out/boot.elf
