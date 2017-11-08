@@ -62,3 +62,4 @@ script:
  - cd uLaunchELF
  - make
  - cp -f ULE.ELF $TRAVIS_BUILD_DIR/out/boot.elf
+ - cd $TRAVIS_BUILD_DIR
