@@ -14,9 +14,9 @@ install:
 
 before_script:
 - wget https://akuhak.github.io/test_build/opl.elf -o out/opl_old.elf
-- wget https://akuhak.github.io/test_build/opl.time -o out/opl_old.time
+#- wget https://akuhak.github.io/test_build/opl.time -o out/opl_old.time
 - wget https://akuhak.github.io/test_build/boot.elf -o out/boot_old.elf
-- wget https://akuhak.github.io/test_build/boot.time -o out/boot_old.time
+#- wget https://akuhak.github.io/test_build/boot.time -o out/boot_old.time
 # setting environment
 - export PS2DEV=${HOME}/ps2dev
 - export PS2SDK=${PS2DEV}/ps2sdk
