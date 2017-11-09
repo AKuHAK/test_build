@@ -13,8 +13,10 @@ install:
  - sudo apt-get install -yqqq gcc-4.4 patch wget make git libc6-dev zlib1g zlib1g-dev libucl1 libucl-dev
 
 before_script:
- - wget https://akuhak.github.io/test_build/opl.elf -o out/opl_old.elf
- - wget https://akuhak.github.io/test_build/boot.elf -o out/boot_old.elf
+- wget https://akuhak.github.io/test_build/opl.elf -o out/opl_old.elf
+- wget https://akuhak.github.io/test_build/opl.time -o out/opl_old.time
+- wget https://akuhak.github.io/test_build/boot.elf -o out/boot_old.elf
+- wget https://akuhak.github.io/test_build/boot.time -o out/boot_old.time
 # setting environment
 - export PS2DEV=${HOME}/ps2dev
 - export PS2SDK=${PS2DEV}/ps2sdk
@@ -28,10 +30,9 @@ before_script:
 - bash ./toolchain.sh 3 > /tmp/PS2TOOLCHAIN3.log 2>&1
 - bash ./toolchain.sh 4 > /tmp/PS2TOOLCHAIN4.log 2>&1
 - cd $TRAVIS_BUILD_DIR
-# installing ps2sdk at specific commit
+# installing ps2sdk
 - git clone https://github.com/ps2dev/ps2sdk.git
 - cd ps2sdk
-#- git checkout 9d1d184
 - make -j2 install --silent
 - cd $TRAVIS_BUILD_DIR
 # installing ps2eth
@@ -41,10 +42,14 @@ before_script:
 - mkdir -p $PS2DEV/ps2eth
 - tar c `find . -name \*irx` | tar x -C $PS2DEV/ps2eth
 - cd $TRAVIS_BUILD_DIR
-# installing libjpeg
 - git clone https://github.com/ps2dev/ps2sdk-ports.git
-- cd ps2sdk-ports/libjpeg
-- make install
+# installing ports
+- cd ps2sdk-ports
+- make install -C libjpeg
+- make install -C zlib
+- make install -C libpng
+- cd freetype-2.4.12
+- bash ./Setup.sh
 - cd $TRAVIS_BUILD_DIR
 # installing gsKit
 - export GSKIT=${PS2DEV}/gsKit
@@ -62,11 +67,15 @@ script:
  - git clone https://github.com/AKuHAK/uLaunchELF
  - cd uLaunchELF
  - make
+ - git log --pretty=format:'%h' -n 1 > $TRAVIS_BUILD_DIR/out/ule.commit
+ - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/ule.time
  - cp -f ULE.ELF $TRAVIS_BUILD_DIR/out/boot.elf
  - cd $TRAVIS_BUILD_DIR
  - git clone https://github.com/AKuHAK/Open-PS2-Loader
  - cd Open-PS2-Loader
  - make
  - ls -l
+ - git log --pretty=format:'%h' -n 1 > $TRAVIS_BUILD_DIR/out/opl.commit
+ - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/opl.time
  - cp -f OPNPS2LD.ELF $TRAVIS_BUILD_DIR/out/opl.elf
  - cd $TRAVIS_BUILD_DIR
