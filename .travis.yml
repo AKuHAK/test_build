@@ -33,7 +33,7 @@ before_script:
 # installing ps2sdk
 - git clone https://github.com/ps2dev/ps2sdk.git
 - cd ps2sdk
-- make -j2 install --silent
+- make install --silent
 - cd $TRAVIS_BUILD_DIR
 # installing ps2eth
 - git clone https://github.com/ps2dev/ps2eth.git
@@ -72,7 +72,7 @@ script:
  - git log --pretty=format:'%h' -n 1 >> $TRAVIS_BUILD_DIR/out/ule.commit
  - cp -f ULE.ELF $TRAVIS_BUILD_DIR/out/boot.elf
  - cd $TRAVIS_BUILD_DIR
- - git clone https://github.com/AKuHAK/Open-PS2-Loader
+ - git clone https://github.com/ifcaro/Open-PS2-Loader
  - cd Open-PS2-Loader
  - make
  - ls -l
@@ -83,3 +83,4 @@ script:
  - cd $TRAVIS_BUILD_DIR
  - mv out/index.html out/index.html.bak
  - cat part1.html out/ule.commit ule_new_old.html ule_old.commit ule_opl.html out/opl.commit opl_new_old.html opl_old.commit partlast.html > out/index.html
+ - cd $TRAVIS_BUILD_DIR
