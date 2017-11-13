@@ -13,10 +13,11 @@ install:
  - sudo apt-get install -yqqq gcc-4.4 patch wget make git libc6-dev zlib1g zlib1g-dev libucl1 libucl-dev
 
 before_script:
-- wget https://akuhak.github.io/test_build/opl.elf -o out/opl_old.elf
-- wget https://akuhak.github.io/test_build/opl.commit -o out/opl_old.commit
-- wget https://akuhak.github.io/test_build/boot.elf -o out/boot_old.elf
-- wget https://akuhak.github.io/test_build/ule.commit -o out/ule_old.commit
+#- rm -rf out/*.elf out/*.commit
+- wget -q https://akuhak.github.io/test_build/opl.elf -O out/opl_old.elf
+- wget -q https://akuhak.github.io/test_build/opl.commit -O out/opl_old.commit
+- wget -q https://akuhak.github.io/test_build/boot.elf -O out/boot_old.elf
+- wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
 # setting environment
 - export PS2DEV=${HOME}/ps2dev
 - export PS2SDK=${PS2DEV}/ps2sdk
