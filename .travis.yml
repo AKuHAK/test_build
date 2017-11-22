@@ -14,7 +14,7 @@ install:
 
 before_script:
 #- rm -rf out/*.elf out/*.commit
-- wget -q https://akuhak.github.io/test_build/opl.elf -O out/opl_old.zip
+- wget -q https://akuhak.github.io/test_build/opl.zip -O out/opl_old.zip
 - wget -q https://akuhak.github.io/test_build/opl.commit -O out/opl_old.commit
 - wget -q https://akuhak.github.io/test_build/boot.elf -O out/boot_old.elf
 - wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
