@@ -83,10 +83,10 @@ script:
  - make GSM=1
  - cp OPNPS2LD.ELF out/OPL_GSM/OPNPS2LD-GSM.ELF
  - make clean
- - make PS2RD=1
+ - make CHEAT=1
  - cp OPNPS2LD.ELF out/OPL_PS2RD/OPNPS2LD-PS2RD.ELF
  - make clean
- - make GSM=1 PS2RD=1 PADEMU=1 IGS=1
+ - make GSM=1 CHEAT=1 PADEMU=1 IGS=1
  - cp OPNPS2LD.ELF out/OPL_GSM+PS2RD+PADEMU+IGS/OPNPS2LD-GSM+PS2RD+PADEMU+IGS.ELF
  - make clean
  - make VMC=1
@@ -95,7 +95,7 @@ script:
  - make VMC=1 GSM=1
  - cp OPNPS2LD.ELF out/OPL_VMC+GSM/OPNPS2LD-VMC+GSM.ELF
  - make clean
- - make VMC=1 PS2RD=1
+ - make VMC=1 CHEAT=1
  - cp OPNPS2LD.ELF out/OPL_VMC+PS2RD/OPNPS2LD-VMC+PS2RD.ELF
  - make clean
  - make release
