@@ -77,6 +77,9 @@ script:
  - cd Open-PS2-Loader
  - mkdir out out/OPL out/OPL_Childproof out/OPL_GSM out/OPL_PS2RD out/OPL_GSM+PS2RD+PADEMU+IGS out/OPL_VMC out/OPL_VMC+GSM out/OPL_VMC+PS2RD
  - bash make_changelog.sh
+ - make
+ - cp OPNPS2LD.ELF out/OPL/
+ - make clean
  - make childproof
  - cp OPNPS2LD.ELF out/OPL_Childproof/OPNPS2LD-Childproof.ELF
  - make clean
