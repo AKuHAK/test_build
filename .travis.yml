@@ -28,7 +28,7 @@ before_script:
 # scripts are silenced cause log will be enormous if we will see all output from toolchain setup
 - bash ./toolchain.sh 1 > /tmp/PS2TOOLCHAIN1.log 2>&1
 - bash ./toolchain.sh 2 > /tmp/PS2TOOLCHAIN2.log 2>&1
-- bash ./toolchain.sh 3 > /tmp/PS2TOOLCHAIN3.log 2>&1
+- travis_wait bash ./toolchain.sh 3 > /tmp/PS2TOOLCHAIN3.log 2>&1
 - bash ./toolchain.sh 4 > /tmp/PS2TOOLCHAIN4.log 2>&1
 - cd $TRAVIS_BUILD_DIR
 # installing ps2sdk
