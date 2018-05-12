@@ -1,72 +1,74 @@
+language: c
+
 deploy:
   provider: pages
   local_dir: out
   skip_cleanup: true
-  github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
+  github_token: $GITHUB_TOKEN
+  # Token will be changed in future
   on:
     branch: master
-    
-sudo: required
 
 services:
   - docker
 
-before_script:
-# download previous version
-#- rm -rf out/*.elf out/*.commit
-- wget -q https://akuhak.github.io/test_build/opl.zip -O out/opl_old.zip
-- wget -q https://akuhak.github.io/test_build/opl.commit -O out/opl_old.commit
-- wget -q https://akuhak.github.io/test_build/boot.elf -O out/boot_old.elf
-- wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
+sudo: required
 
-# Get docker image
+before_script:
+  # download previous version
+  - wget -q https://akuhak.github.io/test_build/opl.zip -O out/opl_old.zip
+  - wget -q https://akuhak.github.io/test_build/opl.commit -O out/opl_old.commit
+  - wget -q https://akuhak.github.io/test_build/boot.elf -O out/boot_old.elf
+  - wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
+
+  # Get docker image
   - docker pull akuhak/ps2toolchain:latest
   - docker ps
 
-# Run DOCKER, run!
+  # Run DOCKER, run!
   - docker run -d akuhak/ps2toolchain bash -c "while true; do sleep 5; done" > container_id
 
-# Configure ps2sdk
+  # Configure ps2sdk
   - docker exec -t $(cat container_id) bash -c "ls -l"
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; make install --silent"
 
-# installing ports
+  # installing ports
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk-ports"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/zlib/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libpng/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libjpeg/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /freetype-2.4.12/; bash ./SetupPS2.sh"
 
-# installing ps2eth
+  # installing ps2eth
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2eth"
   - docker exec -t $(cat container_id) bash -c "cd /ps2eth/; make; mkdir -p $PS2DEV/ps2eth; tar c `find . -name \*irx` | tar x -C $PS2DEV/ps2eth"
 
-# installing gsKit
+  # installing gsKit
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/gsKit"
   - docker exec -t $(cat container_id) bash -c "cd /gsKit/; bash ./setup.sh"
 
-# installing ps2-packer
+  # installing ps2-packer
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2-packer"
   - docker exec -t $(cat container_id) bash -c "cd /gsKit/; make install"
 
 script:
-# uLaunchELF
+  # uLaunchELF
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/AKuHAK/uLaunchELF"
   - docker exec -t $(cat container_id) bash -c "cd /uLaunchELF/; make"
- - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/ule.commit
- - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/ule.commit
- - git log --pretty=format:'%h' -n 1 >> $TRAVIS_BUILD_DIR/out/ule.commit
+  - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/ule.commit
+  - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/ule.commit
+  - git log --pretty=format:'%h' -n 1 >> $TRAVIS_BUILD_DIR/out/ule.commit
   - docker cp -f $(cat container_id):/uLaunchELF/ULE.ELF $TRAVIS_BUILD_DIR/out/boot.elf
-# OPL
+  # OPL
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ifcaro/Open-PS2-Loader"
- - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/opl.commit
- - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/opl.commit
- - git log --pretty=format:'%h' -n 1 >> $TRAVIS_BUILD_DIR/out/opl.commit
- - cd $TRAVIS_BUILD_DIR/
- - mkdir Open-PS2-Loader
- - cd Open-PS2-Loader
- - mkdir out out/OPL out/OPL_Childproof out/OPL_GSM out/OPL_CHEAT out/OPL_GSM+CHEAT+PADEMU+IGS out/OPL_VMC out/OPL_VMC+GSM out/OPL_VMC+CHEAT
+  - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/opl.commit
+  - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/opl.commit
+  - git log --pretty=format:'%h' -n 1 >> $TRAVIS_BUILD_DIR/out/opl.commit
+  - cd $TRAVIS_BUILD_DIR/
+  - mkdir Open-PS2-Loader
+  - cd Open-PS2-Loader
+  - mkdir out out/OPL out/OPL_Childproof out/OPL_GSM out/OPL_CHEAT out/OPL_GSM+CHEAT+PADEMU+IGS out/OPL_VMC out/OPL_VMC+GSM out/OPL_VMC+CHEAT
   - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; bash make_changelog.sh; make"
   - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL/
   - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make childproof"
@@ -85,11 +87,11 @@ script:
   - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL_VMC+CHEAT/OPNPS2LD-VMC+CHEAT.ELF
   - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make release"
   - docker cp -f $(cat container_id):/Open-PS2-Loader/*.ZIP $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/
- - cd $TRAVIS_BUILD_DIR/Open-PS2-Loader/
- - zip -r opl.zip out/
- - ls -l
- - cp -f opl.zip $TRAVIS_BUILD_DIR/out/opl.zip
- - cd $TRAVIS_BUILD_DIR
- - mv out/index.html out/index.html.bak
- - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit partlast.html > out/index.html
- - cd $TRAVIS_BUILD_DIR
+  - cd $TRAVIS_BUILD_DIR/Open-PS2-Loader/
+  - zip -r opl.zip out/
+  - ls -l
+  - cp -f opl.zip $TRAVIS_BUILD_DIR/out/opl.zip
+  - cd $TRAVIS_BUILD_DIR
+  - mv out/index.html out/index.html.bak
+  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit partlast.html > out/index.html
+  - cd $TRAVIS_BUILD_DIR
