@@ -8,106 +8,86 @@ deploy:
     
 sudo: required
 
-install:
- ## Dependencies
- - sudo apt-get install -yqqq gcc-4.4 patch wget make git libc6-dev zlib1g zlib1g-dev libucl1 libucl-dev
+services:
+  - docker
 
 before_script:
+# download previous version
 #- rm -rf out/*.elf out/*.commit
 - wget -q https://akuhak.github.io/test_build/opl.zip -O out/opl_old.zip
 - wget -q https://akuhak.github.io/test_build/opl.commit -O out/opl_old.commit
 - wget -q https://akuhak.github.io/test_build/boot.elf -O out/boot_old.elf
 - wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
-# setting environment
-- export PS2DEV=${HOME}/ps2dev
-- export PS2SDK=${PS2DEV}/ps2sdk
-- export PATH=${PATH}:${PS2DEV}/bin:${PS2DEV}/ee/bin:${PS2DEV}/iop/bin:${PS2DEV}/dvp/bin:${PS2SDK}/bin
-# installing ps2toolchain (without ps2sdk and ps2link)
-- git clone https://github.com/ps2dev/ps2toolchain.git
-- cd ps2toolchain/
-# scripts are silenced cause log will be enormous if we will see all output from toolchain setup
-- bash ./toolchain.sh 1 > /tmp/PS2TOOLCHAIN1.log 2>&1
-- bash ./toolchain.sh 2 > /tmp/PS2TOOLCHAIN2.log 2>&1
-- travis_wait bash ./toolchain.sh 3 > /tmp/PS2TOOLCHAIN3.log 2>&1
-- bash ./toolchain.sh 4 > /tmp/PS2TOOLCHAIN4.log 2>&1
-- cd $TRAVIS_BUILD_DIR
-# installing ps2sdk
-- git clone https://github.com/ps2dev/ps2sdk.git
-- cd ps2sdk
-- make install --silent
-- cd $TRAVIS_BUILD_DIR
-# installing ps2eth
-- git clone https://github.com/ps2dev/ps2eth.git
-- cd ps2eth
-- make
-- mkdir -p $PS2DEV/ps2eth
-- tar c `find . -name \*irx` | tar x -C $PS2DEV/ps2eth
-- cd $TRAVIS_BUILD_DIR
-- git clone https://github.com/ps2dev/ps2sdk-ports.git
+
+# Get docker image
+  - docker pull akuhak/ps2toolchain:latest
+  - docker ps
+
+# Run DOCKER, run!
+  - docker run -d akuhak/ps2toolchain bash -c "while true; do sleep 5; done" > container_id
+
+# Configure ps2sdk
+  - docker exec -t $(cat container_id) bash -c "ls -l"
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; make install --silent"
+
 # installing ports
-- cd ps2sdk-ports
-- make install -C libjpeg
-- make install -C zlib
-- make install -C libpng
-- cd freetype-2.4.12
-- bash ./SetupPS2.sh
-- cd $TRAVIS_BUILD_DIR
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk-ports"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/zlib/; make install"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libpng/; make install"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libjpeg/; make install"
+  - docker exec -t $(cat container_id) bash -c "cd /freetype-2.4.12/; bash ./SetupPS2.sh"
+
+# installing ps2eth
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2eth"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2eth/; make; mkdir -p $PS2DEV/ps2eth; tar c `find . -name \*irx` | tar x -C $PS2DEV/ps2eth"
+
 # installing gsKit
-- export GSKIT=${PS2DEV}/gsKit
-- git clone https://github.com/ps2dev/gsKit.git
-- cd gsKit/
-- bash ./setup.sh
-- cd $TRAVIS_BUILD_DIR
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/gsKit"
+  - docker exec -t $(cat container_id) bash -c "cd /gsKit/; bash ./setup.sh"
+
 # installing ps2-packer
-- git clone https://github.com/ps2dev/ps2-packer.git
-- cd ps2-packer
-- make install
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2-packer"
+  - docker exec -t $(cat container_id) bash -c "cd /gsKit/; make install"
 
 script:
- - cd $TRAVIS_BUILD_DIR
- - git clone https://github.com/AKuHAK/uLaunchELF
- - cd uLaunchELF
- - make
+# uLaunchELF
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/AKuHAK/uLaunchELF"
+  - docker exec -t $(cat container_id) bash -c "cd /uLaunchELF/; make"
  - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/ule.commit
  - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/ule.commit
  - git log --pretty=format:'%h' -n 1 >> $TRAVIS_BUILD_DIR/out/ule.commit
- - cp -f ULE.ELF $TRAVIS_BUILD_DIR/out/boot.elf
- - cd $TRAVIS_BUILD_DIR
- - git clone https://github.com/ifcaro/Open-PS2-Loader
- - cd Open-PS2-Loader
- - mkdir out out/OPL out/OPL_Childproof out/OPL_GSM out/OPL_PS2RD out/OPL_GSM+PS2RD+PADEMU+IGS out/OPL_VMC out/OPL_VMC+GSM out/OPL_VMC+PS2RD
- - bash make_changelog.sh
- - make
- - cp OPNPS2LD.ELF out/OPL/
- - make clean
- - make childproof
- - cp OPNPS2LD.ELF out/OPL_Childproof/OPNPS2LD-Childproof.ELF
- - make clean
- - make GSM=1
- - cp OPNPS2LD.ELF out/OPL_GSM/OPNPS2LD-GSM.ELF
- - make clean
- - make CHEAT=1
- - cp OPNPS2LD.ELF out/OPL_PS2RD/OPNPS2LD-PS2RD.ELF
- - make clean
- - make GSM=1 CHEAT=1 PADEMU=1 IGS=1
- - cp OPNPS2LD.ELF out/OPL_GSM+PS2RD+PADEMU+IGS/OPNPS2LD-GSM+PS2RD+PADEMU+IGS.ELF
- - make clean
- - make VMC=1
- - cp OPNPS2LD.ELF out/OPL_VMC/OPNPS2LD-VMC.ELF
- - make clean
- - make VMC=1 GSM=1
- - cp OPNPS2LD.ELF out/OPL_VMC+GSM/OPNPS2LD-VMC+GSM.ELF
- - make clean
- - make VMC=1 CHEAT=1
- - cp OPNPS2LD.ELF out/OPL_VMC+PS2RD/OPNPS2LD-VMC+PS2RD.ELF
- - make clean
- - make release
- - cp *.ZIP out/
- - zip -r opl.zip out/
- - ls -l
+  - docker cp -f $(cat container_id):/uLaunchELF/ULE.ELF $TRAVIS_BUILD_DIR/out/boot.elf
+# OPL
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ifcaro/Open-PS2-Loader"
  - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/opl.commit
  - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/opl.commit
  - git log --pretty=format:'%h' -n 1 >> $TRAVIS_BUILD_DIR/out/opl.commit
+ - cd $TRAVIS_BUILD_DIR/
+ - mkdir Open-PS2-Loader
+ - cd Open-PS2-Loader
+ - mkdir out out/OPL out/OPL_Childproof out/OPL_GSM out/OPL_CHEAT out/OPL_GSM+CHEAT+PADEMU+IGS out/OPL_VMC out/OPL_VMC+GSM out/OPL_VMC+CHEAT
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; bash make_changelog.sh; make"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL/
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make childproof"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL_Childproof/OPNPS2LD-Childproof.ELF
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make GSM=1"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL_GSM/OPNPS2LD-GSM.ELF
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make CHEAT=1"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL_CHEAT/OPNPS2LD-CHEAT.ELF
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make GSM=1 CHEAT=1 PADEMU=1 IGS=1"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL_GSM+CHEAT+PADEMU+IGS/OPNPS2LD-GSM+CHEAT+PADEMU+IGS.ELF
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make VMC=1"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL_VMC/OPNPS2LD-VMC.ELF
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make VMC=1 GSM=1"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL_VMC+GSM/OPNPS2LD-VMC+GSM.ELF
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make VMC=1 CHEAT=1"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL_VMC+CHEAT/OPNPS2LD-VMC+CHEAT.ELF
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make release"
+  - docker cp -f $(cat container_id):/Open-PS2-Loader/*.ZIP $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/
+ - cd $TRAVIS_BUILD_DIR/Open-PS2-Loader/
+ - zip -r opl.zip out/
+ - ls -l
  - cp -f opl.zip $TRAVIS_BUILD_DIR/out/opl.zip
  - cd $TRAVIS_BUILD_DIR
  - mv out/index.html out/index.html.bak
