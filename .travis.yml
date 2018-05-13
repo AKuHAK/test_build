@@ -42,10 +42,11 @@ before_script:
 
   # installing ps2eth
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2eth"
-  - docker exec -t $(cat container_id) bash -c "cd /ps2eth/; make; mkdir -p $PS2DEV/ps2eth"
-  - docker exec -t $(cat container_id) bash -c "cd /ps2eth/; mkdir -p $PS2DEV/ps2eth/smap $PS2DEV/ps2eth/smap-linux; cp -vf /ps2eth/smap/ps2smap.irx /ps2dev/ps2eth/smap/"
-  # - docker exec -t $(cat container_id) bash -c "cp -f /ps2eth/smap/ps2smap.irx $PS2DEV/ps2eth/smap/"
-  - docker exec -t $(cat container_id) bash -c "cp -f /ps2eth/smap-linux/ps2smap.irx $PS2DEV/ps2eth/smap-linux/"
+  # Ugly hack cause inside this bash no support for PS2DEV
+  - docker exec -t $(cat container_id) bash -c "cd /ps2eth/; make; mkdir -p /ps2dev/ps2eth"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2eth/; mkdir -p /ps2dev/ps2eth/smap /ps2dev/ps2eth/smap-linux"
+  - docker exec -t $(cat container_id) bash -c "cp -f /ps2eth/smap/ps2smap.irx /ps2dev/ps2eth/smap/"
+  - docker exec -t $(cat container_id) bash -c "cp -f /ps2eth/smap-linux/ps2smap.irx /ps2dev/ps2eth/smap-linux/"
 
   # installing gsKit
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/gsKit"
