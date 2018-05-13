@@ -54,7 +54,7 @@ before_script:
 
   # installing ps2-packer
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2-packer"
-  - docker exec -t $(cat container_id) bash -c "cd /gsKit/; make install"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; make install"
 
 script:
   # uLaunchELF
