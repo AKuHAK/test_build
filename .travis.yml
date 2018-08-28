@@ -22,7 +22,7 @@ before_script:
   - wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
 
   # Get docker image
-  - docker pull akuhak/ps2toolchain:testing
+  - docker pull akuhak/ps2toolchain:latest
   - docker ps
 
   # Run DOCKER, run!
@@ -32,6 +32,9 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "ls -l"
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; make install --silent"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; make install --silent"
+  - docker exec -t $(cat container_id) bash -c "ln -sf $PS2SDK/ee/lib/libc.a $PS2DEV/ee/ee/lib/libps2sdkc.a"
+  - docker exec -t $(cat container_id) bash -c "ln -sf $PS2SDK/ee/lib/libkernel.a $PS2DEV/ee/ee/lib/libkernel.a"
 
   # installing ports
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk-ports"
