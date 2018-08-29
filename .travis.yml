@@ -79,7 +79,6 @@ script:
   - docker cp $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPNPS2LD-release.ELF
   - cd $TRAVIS_BUILD_DIR/Open-PS2-Loader/
   - zip -r opl.zip out/
-  - ls -l
   - cp -f opl.zip $TRAVIS_BUILD_DIR/out/opl.zip
   - cd $TRAVIS_BUILD_DIR
   - mv out/index.html out/index.html.bak
