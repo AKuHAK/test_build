@@ -60,7 +60,8 @@ script:
   # uLaunchELF
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/AKuHAK/uLaunchELF"
   - docker exec -t $(cat container_id) bash -c "cd /uLaunchELF/; make"
-  - date -r .travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/ule.commit
+  - date -r $TRAVIS_BUILD_DIR/.travis.yml +%F_%T
+  - date -r $TRAVIS_BUILD_DIR/.travis.yml +%F_%T > $TRAVIS_BUILD_DIR/out/ule.commit
   - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/ule.commit
   - docker exec -t $(cat container_id) bash -c "cd /uLaunchELF/; git log --pretty=format:'%h' -n 1 >> ule.commit"
   - docker cp $(cat container_id):/uLaunchELF/ule.commit $TRAVIS_BUILD_DIR/out/ule.commit
