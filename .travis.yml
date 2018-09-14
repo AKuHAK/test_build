@@ -38,7 +38,7 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/zlib/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libpng/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libjpeg/; make install"
-  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/freetype-2.4.12/; bash ./SetupPS2.sh"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/freetype-2.9.1/; bash ./SetupPS2.sh"
 
   # installing ps2eth
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2eth"
@@ -76,6 +76,7 @@ script:
   - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make"
   - docker cp $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL/
   - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; make clean; make release"
+  - docker exec -t $(cat container_id) bash -c "cd /Open-PS2-Loader/; bash ./make_changelog.sh"
   - docker cp $(cat container_id):/Open-PS2-Loader/DETAILED_CHANGELOG $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL/
   - docker cp $(cat container_id):/Open-PS2-Loader/OPNPS2LD.ELF $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPNPS2LD-release.ELF
   - cd $TRAVIS_BUILD_DIR/Open-PS2-Loader/
