@@ -64,7 +64,7 @@ script:
   - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/ule.commit
   - date -r $TRAVIS_BUILD_DIR/.travis.yml +%F_%T >> $TRAVIS_BUILD_DIR/out/ule.commit
   - docker exec -t $(cat container_id) bash -c "cd /uLaunchELF/; make"
-  - docker cp $(cat container_id):/uLaunchELF/ULE.ELF $TRAVIS_BUILD_DIR/out/boot.elf
+  - docker cp $(cat container_id):/uLaunchELF/BOOT.ELF $TRAVIS_BUILD_DIR/out/boot.elf
   # OPL
   - mkdir -p $TRAVIS_BUILD_DIR/Open-PS2-Loader/out/OPL/
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ifcaro/Open-PS2-Loader"
