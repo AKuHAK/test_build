@@ -21,7 +21,7 @@ before_script:
   - wget -q https://akuhak.github.io/test_build/boot.elf -O out/boot_old.elf
   - wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
   - wget -q https://akuhak.github.io/test_build/boot.elf -O out/fceu-packed_old.elf
-  - wget -q https://akuhak.github.io/test_build/fc.commit -O out/fc_old.commit
+  - wget -q https://akuhak.github.io/test_build/ule.commit -O out/fc_old.commit
 
   # Get docker image
   - docker pull akuhak/ps2toolchain:latest
