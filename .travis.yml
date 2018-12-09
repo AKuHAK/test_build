@@ -20,6 +20,8 @@ before_script:
   - wget -q https://akuhak.github.io/test_build/opl.commit -O out/opl_old.commit
   - wget -q https://akuhak.github.io/test_build/boot.elf -O out/boot_old.elf
   - wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
+  - wget -q https://akuhak.github.io/test_build/boot.elf -O out/fceu-packed_old.elf
+  - wget -q https://akuhak.github.io/test_build/fc.commit -O out/fc_old.commit
 
   # Get docker image
   - docker pull akuhak/ps2toolchain:latest
@@ -57,6 +59,14 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; make install"
 
 script:
+  # Fceumm-PS2
+  - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/AKuHAK/Fceumm-PS2"
+  - docker exec -t $(cat container_id) bash -c "cd /Fceumm-PS2/; git log --pretty=format:'%h' -n 1 > fc.commit"
+  - docker cp $(cat container_id):/Fceumm-PS2/fc.commit $TRAVIS_BUILD_DIR/out/fc.commit
+  - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/fc.commit
+  - date -r $TRAVIS_BUILD_DIR/.travis.yml +%F_%T >> $TRAVIS_BUILD_DIR/out/fc.commit
+  - docker exec -t $(cat container_id) bash -c "cd /Fceumm-PS2/; make -f Makefile.ps2 CDSUPPORT=1"
+  - docker cp $(cat container_id):/Fceumm-PS2/fceu-packed.elf $TRAVIS_BUILD_DIR/out/fceu-packed.elf
   # uLaunchELF
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/AKuHAK/uLaunchELF"
   - docker exec -t $(cat container_id) bash -c "cd /uLaunchELF/; git log --pretty=format:'%h' -n 1 > ule.commit"
@@ -82,7 +92,8 @@ script:
   - cd $TRAVIS_BUILD_DIR/Open-PS2-Loader/
   - zip -r opl.zip out/
   - cp -f opl.zip $TRAVIS_BUILD_DIR/out/opl.zip
+
   - cd $TRAVIS_BUILD_DIR
   - mv out/index.html out/index.html.bak
-  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit partlast.html > out/index.html
+  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit partlast.html > out/index.html
   - cd $TRAVIS_BUILD_DIR
