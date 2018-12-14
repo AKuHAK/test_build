@@ -35,6 +35,9 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "ls -l"
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; make install --silent"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; echo '</td><td>&nbsp;' >> ps2sdk.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2sdk.commit"
+  - docker cp $(cat container_id):/ps2sdk/gs.commit $TRAVIS_BUILD_DIR/out/ps2sdk.commit
 
   # installing ports
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk-ports"
@@ -42,6 +45,9 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libpng/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libjpeg/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/freetype-2.9.1/; bash ./SetupPS2.sh"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/; echo '</td><td>&nbsp;' >> ps2sdk-ports.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2sdk-ports.commit"
+  - docker cp $(cat container_id):/ps2sdk-ports/gs.commit $TRAVIS_BUILD_DIR/out/ps2sdk-ports.commit
 
   # installing ps2eth
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2eth"
@@ -62,6 +68,9 @@ before_script:
   # installing ps2-packer
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2-packer"
   - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; make install"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; echo '</td><td>&nbsp;' >> ps2packer.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2packer.commit"
+  - docker cp $(cat container_id):/ps2-packer/gs.commit $TRAVIS_BUILD_DIR/out/ps2packer.commit
 
 script:
   # Fceumm-PS2
@@ -100,5 +109,5 @@ script:
 
   - cd $TRAVIS_BUILD_DIR
   - mv out/index.html out/index.html.bak
-  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit fc_gs.html out/gs.commit gs_new_old.html out/gs_old.commit gs_old_partlast.html > out/index.html
+  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit fc_ps2sdk.html out/gs.commit ps2sdk_gs.html out/gs.commit gs_new_old.html out/gs_old.commit gs_ps2sdk-ports.html out/ps2sdk-ports.commit ps2sdk-ports_ps2packer.html out/ps2packer.commit ps2packer_end.html > out/index.html
   - cd $TRAVIS_BUILD_DIR
