@@ -35,6 +35,7 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "ls -l"
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2sdk"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; make install --silent"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; git log --pretty=format:'%h' -n 1 > ps2sdk.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; echo '</td><td>&nbsp;' >> ps2sdk.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2sdk.commit"
   - docker cp $(cat container_id):/ps2sdk/ps2sdk.commit $TRAVIS_BUILD_DIR/out/ps2sdk.commit
@@ -45,6 +46,7 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libpng/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libjpeg/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/freetype-2.9.1/; bash ./SetupPS2.sh"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/; git log --pretty=format:'%h' -n 1 > ps2sdk-ports.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/; echo '</td><td>&nbsp;' >> ps2sdk-ports.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2sdk-ports.commit"
   - docker cp $(cat container_id):/ps2sdk-ports/ps2sdk-ports.commit $TRAVIS_BUILD_DIR/out/ps2sdk-ports.commit
@@ -68,6 +70,7 @@ before_script:
   # installing ps2-packer
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2-packer"
   - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; make install"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; git log --pretty=format:'%h' -n 1 > ps2packer.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; echo '</td><td>&nbsp;' >> ps2packer.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2packer.commit"
   - docker cp $(cat container_id):/ps2-packer/ps2packer.commit $TRAVIS_BUILD_DIR/out/ps2packer.commit
