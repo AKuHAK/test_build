@@ -53,6 +53,10 @@ before_script:
   # installing gsKit
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/gsKit"
   - docker exec -t $(cat container_id) bash -c "cd /gsKit/; bash ./setup.sh"
+  - docker exec -t $(cat container_id) bash -c "cd /gsKit/; git log --pretty=format:'%h' -n 1 > gs.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /gsKit/; echo '</td><td>&nbsp;' >> gs.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /gsKit/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> gs.commit"
+  - docker cp $(cat container_id):/gsKit/gs.commit $TRAVIS_BUILD_DIR/out/gs.commit
 
   # installing ps2-packer
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/ps2dev/ps2-packer"
@@ -95,5 +99,5 @@ script:
 
   - cd $TRAVIS_BUILD_DIR
   - mv out/index.html out/index.html.bak
-  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit partlast.html > out/index.html
+  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit fc_gs.html out/gs.commit gs_partlast.html > out/index.html
   - cd $TRAVIS_BUILD_DIR
