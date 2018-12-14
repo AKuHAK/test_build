@@ -22,6 +22,7 @@ before_script:
   - wget -q https://akuhak.github.io/test_build/ule.commit -O out/ule_old.commit
   - wget -q https://akuhak.github.io/test_build/fceu-packed.elf -O out/fceu-packed_old.elf
   - wget -q https://akuhak.github.io/test_build/fc.commit -O out/fc_old.commit
+  - wget -q https://akuhak.github.io/test_build/gs.commit -O out/gs_old.commit
 
   # Get docker image
   - docker pull akuhak/ps2toolchain:latest
@@ -99,5 +100,5 @@ script:
 
   - cd $TRAVIS_BUILD_DIR
   - mv out/index.html out/index.html.bak
-  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit fc_gs.html out/gs.commit gs_partlast.html > out/index.html
+  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit fc_gs.html out/gs.commit gs_new_old.html out/gs_old.commit gs_old_partlast.html > out/index.html
   - cd $TRAVIS_BUILD_DIR
