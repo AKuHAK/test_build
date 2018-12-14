@@ -23,6 +23,10 @@ before_script:
   - wget -q https://akuhak.github.io/test_build/fceu-packed.elf -O out/fceu-packed_old.elf
   - wget -q https://akuhak.github.io/test_build/fc.commit -O out/fc_old.commit
   - wget -q https://akuhak.github.io/test_build/gs.commit -O out/gs_old.commit
+  - wget -q https://akuhak.github.io/test_build/ps2sdk.commit -O out/ps2sdk_old.commit
+  - wget -q https://akuhak.github.io/test_build/ps2sdk-ports.commit -O out/ps2sdk-ports_old.commit
+  - wget -q https://akuhak.github.io/test_build/ps2packer.commit -O out/ps2toolchain_old.commit
+  - wget -q https://akuhak.github.io/test_build/ps2packer.commit -O out/ps2packer_old.commit
 
   # Get docker image
   - docker pull akuhak/ps2toolchain:latest
@@ -75,9 +79,11 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2packer.commit"
   - docker cp $(cat container_id):/ps2-packer/ps2packer.commit $TRAVIS_BUILD_DIR/out/ps2packer.commit
 
-  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log --pretty=format:'%h' -n 1 > ps2toolchain.commit"
+#  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log --pretty=format:'%h' -n 1 > ps2toolchain.commit"
+  - docker exec -t $(cat container_id) bash -c "mkdir -p /ps2toolchain/; cd /ps2toolchain/; echo 'dummy' > ps2toolchain.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; echo '</td><td>&nbsp;' >> ps2toolchain.commit"
-  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2toolchain.commit"
+#  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2toolchain.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; echo 'dummy_date' >> ps2toolchain.commit"
   - docker cp $(cat container_id):/ps2toolchain/ps2toolchain.commit $TRAVIS_BUILD_DIR/out/ps2toolchain.commit
 
 script:
@@ -117,5 +123,5 @@ script:
 
   - cd $TRAVIS_BUILD_DIR
   - mv out/index.html out/index.html.bak
-  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit fc_ps2toolchain.html out/ps2toolchain.commit ps2toolchain_ps2sdk.html out/ps2sdk.commit ps2sdk_gs.html out/gs.commit gs_new_old.html out/gs_old.commit gs_ps2sdk-ports.html out/ps2sdk-ports.commit ps2sdk-ports_ps2packer.html out/ps2packer.commit ps2packer_end.html > out/index.html
+  - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit fc_ps2toolchain.html out/ps2toolchain.commit dep_new_old.html out/ps2toolchain_old.commit ps2toolchain_ps2sdk.html out/ps2sdk.commit dep_new_old.html out/ps2sdk_old.commit ps2sdk_gs.html out/gs.commit dep_new_old.html out/gs_old.commit gs_ps2sdk-ports.html out/ps2sdk-ports.commit dep_new_old.html out/ps2sdk-ports_old.commit ps2sdk-ports_ps2packer.html out/ps2packer.commit dep_new_old.html out/ps2packer_old.commit ps2packer_end.html > out/index.html
   - cd $TRAVIS_BUILD_DIR
