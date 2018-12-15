@@ -25,7 +25,7 @@ before_script:
   - wget -q https://akuhak.github.io/test_build/gs.commit -O out/gs_old.commit
   - wget -q https://akuhak.github.io/test_build/ps2sdk.commit -O out/ps2sdk_old.commit
   - wget -q https://akuhak.github.io/test_build/ps2sdk-ports.commit -O out/ps2sdk-ports_old.commit
-  - wget -q https://akuhak.github.io/test_build/ps2packer.commit -O out/ps2toolchain_old.commit
+  - wget -q https://akuhak.github.io/test_build/ps2toolchain.commit -O out/ps2toolchain_old.commit
   - wget -q https://akuhak.github.io/test_build/ps2packer.commit -O out/ps2packer_old.commit
 
   # Get docker image
@@ -79,11 +79,11 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2packer.commit"
   - docker cp $(cat container_id):/ps2-packer/ps2packer.commit $TRAVIS_BUILD_DIR/out/ps2packer.commit
 
-#  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log --pretty=format:'%h' -n 1 > ps2toolchain.commit"
-  - docker exec -t $(cat container_id) bash -c "mkdir -p /ps2toolchain/; cd /ps2toolchain/; echo 'dummy' > ps2toolchain.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log --pretty=format:'%h' -n 1 > ps2toolchain.commit"
+#  - docker exec -t $(cat container_id) bash -c "mkdir -p /ps2toolchain/; cd /ps2toolchain/; echo 'dummy' > ps2toolchain.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; echo '</td><td>&nbsp;' >> ps2toolchain.commit"
-#  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2toolchain.commit"
-  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; echo 'dummy_date' >> ps2toolchain.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2toolchain.commit"
+#  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; echo 'dummy_date' >> ps2toolchain.commit"
   - docker cp $(cat container_id):/ps2toolchain/ps2toolchain.commit $TRAVIS_BUILD_DIR/out/ps2toolchain.commit
 
 script:
