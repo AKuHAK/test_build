@@ -79,12 +79,12 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /ps2-packer/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2packer.commit"
   - docker cp $(cat container_id):/ps2-packer/ps2packer.commit $TRAVIS_BUILD_DIR/out/ps2packer.commit
 
-  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log --pretty=format:'%h' -n 1 > ps2toolchain.commit"
-#  - docker exec -t $(cat container_id) bash -c "mkdir -p /ps2toolchain/; cd /ps2toolchain/; echo 'dummy' > ps2toolchain.commit"
-  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; echo '</td><td>&nbsp;' >> ps2toolchain.commit"
-  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2toolchain.commit"
-#  - docker exec -t $(cat container_id) bash -c "cd /ps2toolchain/; echo 'dummy_date' >> ps2toolchain.commit"
-  - docker cp $(cat container_id):/ps2toolchain/ps2toolchain.commit $TRAVIS_BUILD_DIR/out/ps2toolchain.commit
+  - docker exec -t $(cat container_id) bash -c "cd /toolchain/; git log --pretty=format:'%h' -n 1 > ps2toolchain.commit"
+#  - docker exec -t $(cat container_id) bash -c "mkdir -p /toolchain/; cd /toolchain/; echo 'dummy' > ps2toolchain.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /toolchain/; echo '</td><td>&nbsp;' >> ps2toolchain.commit"
+  - docker exec -t $(cat container_id) bash -c "cd /toolchain/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2toolchain.commit"
+#  - docker exec -t $(cat container_id) bash -c "cd /toolchain/; echo 'dummy_date' >> ps2toolchain.commit"
+  - docker cp $(cat container_id):/toolchain/ps2toolchain.commit $TRAVIS_BUILD_DIR/out/ps2toolchain.commit
 
 script:
   # Fceumm-PS2
