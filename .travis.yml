@@ -49,7 +49,7 @@ before_script:
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/zlib/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libpng/; make install"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/libjpeg/; make install"
-  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/freetype-2.9.1/; bash ./SetupPS2.sh"
+  - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/freetype2/; bash ./SetupPS2.sh"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/; git log --pretty=format:'%h' -n 1 > ps2sdk-ports.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/; echo '</td><td>&nbsp;' >> ps2sdk-ports.commit"
   - docker exec -t $(cat container_id) bash -c "cd /ps2sdk-ports/; git log -1 --format='%at' | xargs -I{} date -d @{} +%F_%T >> ps2sdk-ports.commit"
