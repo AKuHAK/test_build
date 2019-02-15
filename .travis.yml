@@ -89,7 +89,7 @@ script:
   - docker cp $(cat container_id):/Fceumm-PS2/fc.commit $TRAVIS_BUILD_DIR/out/fc.commit
   - echo "</td><td>&nbsp;" >> $TRAVIS_BUILD_DIR/out/fc.commit
   - date -r $TRAVIS_BUILD_DIR/.travis.yml +%F_%T >> $TRAVIS_BUILD_DIR/out/fc.commit
-  - docker exec -t $(cat container_id) bash -c "cd /Fceumm-PS2/; make -f Makefile.ps2 CDSUPPORT=1"
+  - docker exec -t $(cat container_id) bash -c "cd /Fceumm-PS2/; make CDSUPPORT=1"
   - docker cp $(cat container_id):/Fceumm-PS2/fceu-packed.elf $TRAVIS_BUILD_DIR/out/fceu-packed.elf
   # uLaunchELF
   - docker exec -t $(cat container_id) bash -c "cd /; git clone https://github.com/AKuHAK/uLaunchELF"
