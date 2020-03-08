@@ -1,5 +1,5 @@
 language: c
-OS: linux
+os: linux
 
 deploy:
   provider: pages
