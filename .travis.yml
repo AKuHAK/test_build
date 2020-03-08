@@ -1,18 +1,16 @@
 language: c
+OS: linux
 
 deploy:
   provider: pages
   local_dir: out
-  skip_cleanup: true
-  github_token: $GITHUB_TOKEN
+  token: $GITHUB_TOKEN
   # Token will be changed in future
   on:
     branch: master
 
 services:
   - docker
-
-sudo: required
 
 before_script:
   # download previous version
