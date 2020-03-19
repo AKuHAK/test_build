@@ -1,14 +1,12 @@
 language: c
 os: linux
+dist: bionic
 
 deploy:
-  skip_cleanup: true
   strategy: git
-  dist: bionic
   provider: pages
   local_dir: out
   token: $GITHUB_TOKEN
-  # Token will be changed in future
   on:
     branch: master
 
