@@ -2,19 +2,13 @@ language: c
 os: linux
 dist: bionic
 
-deploy:
-  strategy: git
-  provider: pages
-  local_dir: out
-  token: $GITHUB_TOKEN
-  on:
-    branch: master
-
 services:
   - docker
 
 before_script:
   # download previous version
+  - mkdir -p out/
+  - wget -q https://akuhak.github.io/test_build/index.html -O out/index.html.bak
   - wget -q https://akuhak.github.io/test_build/opl.zip -O out/opl_old.zip
   - wget -q https://akuhak.github.io/test_build/opl.commit -O out/opl_old.commit
   - wget -q https://akuhak.github.io/test_build/boot.elf -O out/boot_old.elf
@@ -115,8 +109,14 @@ script:
   - cd $TRAVIS_BUILD_DIR/Open-PS2-Loader/
   - zip -r opl.zip out/
   - cp -f opl.zip $TRAVIS_BUILD_DIR/out/opl.zip
-
   - cd $TRAVIS_BUILD_DIR
-  - mv out/index.html out/index.html.bak
   - cat part1.html out/ule.commit ule_new_old.html out/ule_old.commit ule_opl.html out/opl.commit opl_new_old.html out/opl_old.commit opl_fc.html out/fc.commit fc_new_old.html out/fc_old.commit fc_ps2toolchain.html out/ps2toolchain.commit dep_new_old.html out/ps2toolchain_old.commit ps2toolchain_ps2sdk.html out/ps2sdk.commit dep_new_old.html out/ps2sdk_old.commit ps2sdk_gs.html out/gs.commit dep_new_old.html out/gs_old.commit gs_ps2sdk-ports.html out/ps2sdk-ports.commit dep_new_old.html out/ps2sdk-ports_old.commit ps2sdk-ports_ps2packer.html out/ps2packer.commit dep_new_old.html out/ps2packer_old.commit ps2packer_end.html > out/index.html
   - cd $TRAVIS_BUILD_DIR
+
+deploy:
+  strategy: git
+  provider: pages
+  local_dir: out
+  token: $GITHUB_TOKEN
+  on:
+    branch: master
