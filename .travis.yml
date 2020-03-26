@@ -116,6 +116,7 @@ script:
 deploy:
   strategy: git
   provider: pages
+  skip_cleanup: true
   local_dir: out
   token: $GITHUB_TOKEN
   on:
