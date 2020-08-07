@@ -8,3 +8,5 @@ Open-PS2-Loader latest development [build](https://github.com/ps2homebrew/Open-P
 [![GitHub Pre-Releases (by Asset)](https://img.shields.io/github/downloads-pre/ps2homebrew/wLaunchELF/latest/total?label=downloads%40wLE&style=for-the-badge)](https://github.com/ps2homebrew/wLaunchELF/releases/tag/latest)
 
 wLaunchELF latest development [build](https://github.com/ps2homebrew/wLaunchELF/releases/tag/latest)
+
+ReotroArch latest development [build](https://buildbot.libretro.com/nightly/playstation/ps2/) Note:*Select archive at the end of the page*
