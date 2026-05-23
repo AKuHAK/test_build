@@ -11,7 +11,7 @@
       --gold-dim: #8a7b53;
       --stone-surface: rgba(20, 18, 15, 0.75);
       --error-red: #8b2626;
-      --decoy-green: #2ecc71; /* Цвет для цифры-обманки */
+      --decoy-green: #2ecc71;
     }
 
     body {
@@ -26,7 +26,12 @@
       background-image:
         radial-gradient(circle at center, #1a1714 0%, var(--bg-void) 100%),
         url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-      overflow: hidden;
+
+      /* ИСПРАВЛЕНИЕ СКРОЛЛА ДЛЯ ТЕЛЕФОНОВ */
+      overflow-x: hidden; /* Прячем только горизонтальный скролл */
+      overflow-y: auto;   /* Разрешаем листать вниз */
+      padding: 20px 10px; /* Даем немного отступов сверху и снизу на всякий случай */
+      box-sizing: border-box;
     }
 
     /* Экраны и оверлеи */
@@ -38,7 +43,7 @@
 
     .boot-text {
       font-family: 'Times New Roman', Times, serif; font-size: 18px; letter-spacing: 6px;
-      color: var(--gold-dim); text-transform: uppercase;
+      color: var(--gold-dim); text-transform: uppercase; text-align: center; padding: 20px;
       animation: slow-breathe 4s infinite ease-in-out;
     }
 
@@ -64,6 +69,7 @@
       clip-path: polygon(0 20px, 20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
       border-top: 1px solid var(--gold-dim); border-bottom: 1px solid var(--gold-dim);
       box-shadow: inset 0 0 60px rgba(0,0,0,0.8); transition: opacity 1.5s ease;
+      box-sizing: border-box;
     }
 
     .monolith-interface::before, .monolith-interface::after {
@@ -113,7 +119,7 @@
     .module-link .id { font-size: 10px; opacity: 0.5; margin-bottom: 10px; display: block; letter-spacing: 2px; }
     .module-link .name { font-family: 'Times New Roman', Times, serif; font-size: 16px; letter-spacing: 3px; }
 
-    /* Ввод пароля (Защитная зона) */
+    /* Ввод пароля */
     .final-input-zone { text-align: center; position: relative; z-index: 20; }
     .final-input-zone::before {
       content: ''; position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
@@ -152,7 +158,7 @@
     }
     .timer-title {
       font-family: 'Times New Roman', Times, serif; font-size: 20px; letter-spacing: 12px;
-      color: var(--gold-dim); margin-bottom: 40px; text-transform: uppercase;
+      color: var(--gold-dim); margin-bottom: 40px; text-transform: uppercase; text-align: center;
     }
     .timer-countdown {
       font-family: 'Times New Roman', Times, serif; font-size: 70px;
@@ -164,34 +170,14 @@
        ПАСХАЛКА: БУКВЫ, ЦИФРЫ И ЭКРАН СБОЯ
        ========================================= */
     .bg-char {
-      position: fixed;
-      font-family: 'Times New Roman', Times, serif;
-      font-size: 26px;
-      color: rgba(212, 175, 55, 0.08); /* Очень тусклые */
-      cursor: pointer;
-      z-index: 100;
-      user-select: none;
+      position: fixed; font-family: 'Times New Roman', Times, serif; font-size: 26px;
+      color: rgba(212, 175, 55, 0.08); cursor: pointer; z-index: 100; user-select: none;
       transition: color 0.3s, text-shadow 0.3s, transform 0.2s;
     }
-
     .bg-char:hover { color: rgba(212, 175, 55, 0.8); transform: scale(1.3); }
-
-    /* Целевые буквы при клике */
-    .bg-char.found {
-      color: var(--error-red) !important;
-      text-shadow: 0 0 20px var(--error-red);
-      pointer-events: none;
-      font-weight: bold;
-    }
-
-    /* Специальный класс для зеленой цифры-обманки */
-    .bg-char.green-decoy {
-      color: rgba(46, 204, 113, 0.2);
-    }
-    .bg-char.green-decoy:hover {
-      color: rgba(46, 204, 113, 0.9);
-      text-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
-    }
+    .bg-char.found { color: var(--error-red) !important; text-shadow: 0 0 20px var(--error-red); pointer-events: none; font-weight: bold; }
+    .bg-char.green-decoy { color: rgba(46, 204, 113, 0.2); }
+    .bg-char.green-decoy:hover { color: rgba(46, 204, 113, 0.9); text-shadow: 0 0 15px rgba(46, 204, 113, 0.6); }
 
     #easterEggScreen {
       position: fixed; inset: 0; background: var(--bg-void); z-index: 20000;
@@ -201,18 +187,44 @@
 
     .glitch-text {
       color: var(--error-red); font-family: 'Times New Roman', Times, serif; font-size: 32px;
-      letter-spacing: 5px; margin-bottom: 30px; text-transform: uppercase;
+      letter-spacing: 5px; margin-bottom: 30px; text-transform: uppercase; text-align: center;
       text-shadow: 2px 2px 0px rgba(212,175,55,0.5), -2px -2px 0px rgba(139,38,38,0.5);
-      animation: text-glitch 0.2s infinite;
+      animation: text-glitch 0.2s infinite; padding: 0 20px;
     }
-
-    .easter-image {
-      max-width: 80%; max-height: 70vh; border: 1px solid var(--error-red);
-      box-shadow: 0 0 50px rgba(139, 38, 38, 0.4);
-    }
+    .easter-image { max-width: 90%; max-height: 60vh; border: 1px solid var(--error-red); box-shadow: 0 0 50px rgba(139, 38, 38, 0.4); }
 
     @keyframes flash { 0%, 100% { background: var(--bg-void); } 50% { background: var(--error-red); } }
     @keyframes text-glitch { 0% { transform: translate(0); } 33% { transform: translate(-3px, 1px); } 66% { transform: translate(3px, -1px); } 100% { transform: translate(0); } }
+
+    /* =========================================
+       МОБИЛЬНАЯ АДАПТИВНОСТЬ (СМАРТФОНЫ)
+       ========================================= */
+    @media (max-width: 768px) {
+      .monolith-interface {
+        padding: 30px 15px; /* Уменьшаем отступы по краям */
+        clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+      }
+      .header h1 { font-size: 22px; letter-spacing: 6px; }
+      .header p { font-size: 10px; letter-spacing: 2px; }
+      .quote { font-size: 12px; margin-bottom: 25px; }
+
+      .module-grid {
+        grid-template-columns: 1fr; /* Кнопки в один столбец */
+        gap: 15px; margin-bottom: 40px;
+      }
+
+      .input-wrapper {
+        flex-direction: column; /* Инпут и кнопка друг под другом */
+        align-items: center;
+        gap: 15px;
+      }
+
+      input[type="text"] { width: 160px; font-size: 24px; letter-spacing: 8px; }
+
+      .timer-countdown { font-size: 35px; letter-spacing: 2px; }
+      .timer-title { font-size: 14px; letter-spacing: 6px; }
+      .glitch-text { font-size: 20px; }
+    }
   </style>
 </head>
 <body>
@@ -228,7 +240,7 @@
   <div class="dust-particles"></div>
 
   <div id="easterEggScreen">
-    <div class="glitch-text">CRITICAL SYSTEM FAILURE // PROTOCOL_ORACLE</div>
+    <div class="glitch-text">CRITICAL SYSTEM FAILURE<br>// PROTOCOL_ORACLE</div>
     <img src="easter.png" alt="Easter Egg" class="easter-image">
   </div>
 
@@ -240,7 +252,8 @@
   <div class="monolith-interface" id="mainTerminal">
     <div class="header">
       <h1>The Somnus Archive</h1>
-      <p id="degCounter">SYSTEM DEGRADATION AT 83%</p> </div>
+      <p id="degCounter">SYSTEM DEGRADATION AT 83%</p>
+    </div>
 
     <div class="quote">
       "Memory is not a recording. It is a reconstruction."
@@ -289,7 +302,7 @@
       bootScreen.style.opacity = '0';
       setTimeout(() => {
         bootScreen.style.display = 'none';
-        spawnEasterLetters(); // Генерируем буквы только когда экран загрузился, чтобы вычислить размеры
+        spawnEasterLetters();
       }, 2000);
     });
 
@@ -304,7 +317,7 @@
     const timerScreen = document.getElementById('timerScreen');
     const timerDisplay = document.getElementById('timerDisplay');
 
-    // Целевая дата: 31 июля 2026 года, 00:00:00
+    // Целевая дата: 31 июля 2026
     const targetDate = new Date("2026-07-31T00:00:00").getTime();
 
     function startTimer() {
@@ -372,54 +385,47 @@
     input.addEventListener('input', () => { msg.textContent = ''; });
 
     /* =========================================
-       2. ЛОГИКА ПАСХАЛКИ И ИЗБЕГАНИЯ ЗОНЫ ВВОДА
+       2. ЛОГИКА ПАСХАЛКИ (O-R-A-C-L-E)
        ========================================= */
     const easterWord = "ORACLE";
-    let currentEasterIndex = 1; // Буква 'O' уже нажата
+    let currentEasterIndex = 1;
     const degCounter = document.getElementById('degCounter');
     const safeZoneElement = document.getElementById('safeZone');
 
-    // Функция, которая ищет безопасные координаты в пикселях (вдали от зоны ввода)
     function getSafeCoords() {
       const rect = safeZoneElement.getBoundingClientRect();
-      const padding = 30; // Отступ безопасности (в пикселях) вокруг блока ввода
+      const padding = 20;
       let x, y, isOverlapping;
 
       do {
-        // Генерируем x, y по всему экрану с небольшими отступами от краев окна
+        // Учитываем прокрутку, если она есть
         x = Math.random() * (window.innerWidth - 60) + 30;
         y = Math.random() * (window.innerHeight - 60) + 30;
 
-        // Проверяем, не попали ли координаты в "защищенную" зону блока ввода
         isOverlapping = (
           x > (rect.left - padding) &&
           x < (rect.right + padding) &&
+          // Поскольку буквы fixed, проверяем пересечение в координатах экрана
           y > (rect.top - padding) &&
           y < (rect.bottom + padding)
         );
-      } while (isOverlapping); // Если попали — рандомим заново
+      } while (isOverlapping);
 
       return { x: x + 'px', y: y + 'px' };
     }
 
     function spawnEasterLetters() {
-      const alphabet = "BDFGHIJKMNPQSTUVWXYZ"; // Без букв слова ORACLE
+      const alphabet = "BDFGHIJKMNPQSTUVWXYZ";
       const digits = "0123456789";
       const itemsToSpawn = [];
 
-      // 1. Добавляем букву O (она будет нажатой)
       itemsToSpawn.push({ char: 'O', type: 'first' });
-
-      // 2. Добавляем остальные R, A, C, L, E
       for (let i = 1; i < easterWord.length; i++) {
         itemsToSpawn.push({ char: easterWord[i], type: 'target' });
       }
-
-      // 3. Добавляем ОДНУ зеленую цифру-обманку
       itemsToSpawn.push({ char: digits[Math.floor(Math.random() * 10)], type: 'decoy' });
 
-      // 4. Добиваем массив до 30 элементов шумом (буквами и цифрами)
-      while (itemsToSpawn.length < 30) {
+      while (itemsToSpawn.length < 60) {
         if (Math.random() > 0.4) {
           itemsToSpawn.push({ char: alphabet[Math.floor(Math.random() * alphabet.length)], type: 'noise' });
         } else {
@@ -427,35 +433,24 @@
         }
       }
 
-      // Перемешиваем массив, чтобы они появлялись в DOM в случайном порядке
       for (let i = itemsToSpawn.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [itemsToSpawn[i], itemsToSpawn[j]] = [itemsToSpawn[j], itemsToSpawn[i]];
       }
 
-      // Отрисовываем каждый символ
       itemsToSpawn.forEach(item => {
         const span = document.createElement('span');
         span.textContent = item.char;
         span.className = 'bg-char';
 
-        // Если это буква O
-        if (item.type === 'first') {
-          span.classList.add('found');
-        }
-        // Если это зеленая обманка
-        else if (item.type === 'decoy') {
-          span.classList.add('green-decoy');
-        }
+        if (item.type === 'first') { span.classList.add('found'); }
+        else if (item.type === 'decoy') { span.classList.add('green-decoy'); }
 
-        // Вычисляем безопасные координаты и применяем их
         const coords = getSafeCoords();
         span.style.left = coords.x;
         span.style.top = coords.y;
 
-        // Обработчик клика только для целевых букв ORACLE
         span.addEventListener('click', () => handleCharClick(span, item.char, item.type));
-
         document.body.appendChild(span);
       });
     }
@@ -481,8 +476,6 @@
       document.querySelectorAll('.bg-char').forEach(el => el.style.display = 'none');
       document.getElementById('easterEggScreen').classList.add('active');
     }
-
-    // Обратите внимание: spawnEasterLetters() теперь вызывается после растворения черного экрана
   </script>
 </body>
 </html>
