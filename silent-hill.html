@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Restless Dreams // Silent Hill 2</title>
+  <style>
+    :root {
+      --sh-dark: #0a0908;
+      --sh-rust: #3a1f17;
+      --sh-blood: #6b1d1d;
+      --sh-fog: #6e6a66;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #030303;
+      font-family: 'Times New Roman', Times, serif; /* Винтажный, книжный шрифт для атмосферы */
+      color: #fff;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Контейнер модуля */
+    .module-sh2 {
+      width: 600px;
+      height: 400px;
+      background: var(--sh-dark);
+      border: 1px solid #1c1412;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9), inset 0 0 100px rgba(43, 24, 16, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header {
+      position: absolute;
+      top: 15px; left: 20px;
+      font-size: 11px;
+      letter-spacing: 5px;
+      color: #444;
+      text-transform: uppercase;
+      z-index: 5;
+    }
+
+    /* Блок с текстом под туманом */
+    .screen-content {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+
+    /* Эффект шума старого радио */
+    .radio-static {
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Нестабильная цитата Джеймса */
+    .quote-text {
+      font-size: 24px;
+      text-align: center;
+      line-height: 1.8;
+      letter-spacing: 3px;
+      color: #8a817c;
+      /* Эффект размытого сознания */
+      filter: blur(1px);
+      text-shadow: 0 0 10px rgba(255,255,255,0.1);
+      animation: pulse-mind 4s infinite ease-in-out;
+      max-width: 85%;
+    }
+
+    /* Скрытая буква S */
+    .target-letter {
+      font-weight: bold;
+      color: #aaa;
+      transition: all 0.5s ease;
+    }
+
+    /* Холст с физикой тумана поверх текста */
+    #fogCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      cursor: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"%3E%3Ccircle cx="5" cy="5" r="2" fill="white"/%3E%3C/svg%3E'), auto;
+    }
+
+    /* =========================================
+       СОСТОЯНИЕ УСПЕХА (ТУМАН РАССЕЯЛСЯ)
+       ========================================= */
+    .module-sh2.cleared {
+      border-color: var(--sh-blood);
+      box-shadow: 0 0 40px rgba(107, 29, 29, 0.2);
+    }
+
+    .module-sh2.cleared .quote-text {
+      filter: blur(0);
+      color: #bbb;
+      text-shadow: 0 0 5px rgba(0,0,0,0.5);
+      animation: none;
+    }
+
+    .module-sh2.cleared .target-letter {
+      color: var(--sh-blood);
+      text-shadow: 0 0 15px var(--sh-blood), 0 0 25px var(--sh-blood);
+      font-size: 1.2em;
+    }
+
+    .module-sh2.cleared #fogCanvas {
+      pointer-events: none;
+    }
+
+    @keyframes pulse-mind {
+      0%, 100% { filter: blur(1px); opacity: 0.8; transform: scale(1); }
+      50% { filter: blur(2.5px); opacity: 0.5; transform: scale(0.98); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="module-sh2" id="shModule">
+    <div class="header">SIGNAL_LOST // LAKEVIEW</div>
+
+    <div class="screen-content">
+      <div class="radio-static"></div>
+      <p class="quote-text" id="quote">
+        "Mary... Is it really you?<br>Or am I just... in<span class="target-letter" id="secretLetter">S</span>ane?"
+      </p>
+    </div>
+
+    <canvas id="fogCanvas"></canvas>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('fogCanvas');
+    const ctx = canvas.getContext('2d');
+    const moduleContainer = document.getElementById('shModule');
+    const secretLetter = document.getElementById('secretLetter');
+
+    let width, height;
+    let isDrawing = false;
+    let clearedPixelsTarget = 0;
+    let winTriggered = false;
+
+    // Подгоняем размер холста под контейнер
+    function resize() {
+      width = canvas.width = moduleContainer.clientWidth;
+      height = canvas.height = moduleContainer.clientHeight;
+      fillFogInitial();
+    }
+
+    // Первоначальное заполнение холста густым текстурным туманом
+    function fillFogInitial() {
+      ctx.fillStyle = '#262321'; // Базовый темный цвет смога
+      ctx.fillRect(0, 0, width, height);
+
+      // Генерируем клубы тумана случайными полупрозрачными кругами
+      for (let i = 0; i < 150; i++) {
+        drawFogPuff(Math.random() * width, Math.random() * height, 50 + Math.random() * 60, 0.15);
+      }
+    }
+
+    // Рисование одной "частицы" тумана (мягкий градиентный круг)
+    function drawFogPuff(x, y, radius, opacity) {
+      let grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      grad.addColorStop(0, `rgba(110, 106, 102, ${opacity})`);
+      grad.addColorStop(0.5, `rgba(74, 69, 65, ${opacity * 0.4})`);
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Функция стирания тумана (протирка окна)
+    function wipeFog(x, y) {
+      if (winTriggered) return;
+
+      // Стираем туман с помощью специального режима наложения
+      ctx.globalCompositeOperation = 'destination-out';
+
+      // Создаем эффект размытой кисти для стирания
+      let brushRadius = 35;
+      let grad = ctx.createRadialGradient(x, y, 0, x, y, brushRadius);
+      grad.addColorStop(0, 'rgba(0,0,0,1)');
+      grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, brushRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Проверяем, очистил ли игрок центр экрана, где находится буква S
+      checkCenterCleared(x, y);
+    }
+
+    // Логика проверки: если игрок активно трет область вокруг буквы S
+    function checkCenterCleared(x, y) {
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      // Дистанция от клика до центра буквы
+      const dist = Math.hypot(x - centerX, y - centerY);
+
+      if (dist < 60) {
+        clearedPixelsTarget += 1;
+        // Если игрок сделал достаточно движений в центре (очистил его)
+        if (clearedPixelsTarget > 45) {
+          triggerWin();
+        }
+      }
+    }
+
+    // Победа: туман плавно рассеивается насовсем
+    function triggerWin() {
+      winTriggered = true;
+      moduleContainer.classList.add('cleared');
+
+      // Анимация плавного исчезновения остатков тумана
+      let fadeInterval = setInterval(() => {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = 'rgba(0,0,0,0.1)';
+        ctx.fillRect(0, 0, width, height);
+
+        // Когда холст полностью чист — останавливаем
+        if (secretLetter.style.color === 'var(--sh-blood)') {
+          clearInterval(fadeInterval);
+        }
+      }, 30);
+    }
+
+    // ФИЗИКА ТУМАНА: Постоянное возвращение тумана (регенерация)
+    function simulateFogPhysics() {
+      if (winTriggered) return;
+
+      // Каждые несколько кадров на холсте случайно материализуются новые клубы тумана,
+      // затягивая обратно протертые места
+      if (Math.random() < 0.4) {
+        // Просчитываем случайные координаты, смещенные к краям или центру
+        let x = Math.random() * width;
+        let y = Math.random() * height;
+        let radius = 40 + Math.random() * 50;
+        drawFogPuff(x, y, radius, 0.015); // Очень блеклый, но частый наплыв
+      }
+
+      requestAnimationFrame(simulateFogPhysics);
+    }
+
+    // Слушатели мыши / тача
+    canvas.addEventListener('mousedown', (e) => { isDrawing = true; const r = canvas.getBoundingClientRect(); wipeFog(e.clientX - r.left, e.clientY - r.top); });
+    window.addEventListener('mouseup', () => isDrawing = false);
+    canvas.addEventListener('mousemove', (e) => {
+      if (!isDrawing) return;
+      const r = canvas.getBoundingClientRect();
+      wipeFog(e.clientX - r.left, e.clientY - r.top);
+    });
+
+    // Поддержка мобильных устройств
+    canvas.addEventListener('touchstart', (e) => { isDrawing = true; const r = canvas.getBoundingClientRect(); wipeFog(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top); }, {passive: true});
+    window.addEventListener('touchend', () => isDrawing = false);
+    canvas.addEventListener('touchmove', (e) => {
+      if (!isDrawing) return;
+      const r = canvas.getBoundingClientRect();
+      wipeFog(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
+
+    // Запуск
+    resize();
+    simulateFogPhysics();
+  </script>
+
+</body>
+</html>

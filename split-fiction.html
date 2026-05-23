@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fracture Sync // Split Fiction</title>
+  <style>
+    :root {
+      --bg-color: #0d0f12;
+      --neon-cyan: #00f3ff;
+      --panel-bg: #1a1e24;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--bg-color);
+      font-family: 'Courier New', Courier, monospace;
+      color: #fff;
+    }
+
+    .module-split {
+      width: 500px;
+      padding: 30px;
+      background: var(--panel-bg);
+      border: 1px solid #333;
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      position: relative;
+    }
+
+    .header {
+      text-align: center;
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: #777;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+      transition: color 0.3s, text-shadow 0.3s;
+    }
+
+    /* Экран */
+    .viewport {
+      height: 250px;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid #222;
+      border-radius: 4px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 30px;
+      transition: background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    /* Левая и правая половины */
+    .shard {
+      position: absolute;
+      width: 50%;
+      height: 100%;
+      background-color: #2a313b;
+      background-image: url('GlwtdypWwAAqR9R.jpg');
+      background-size: 200% 100%;
+      background-repeat: no-repeat;
+      z-index: 2;
+      transition: filter 0.1s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .shard.left {
+      left: 0;
+      border-right: 2px solid #555;
+      justify-content: flex-end;
+      background-position: left center;
+    }
+
+    .shard.right {
+      right: 0;
+      border-left: 2px solid #555;
+      justify-content: flex-start;
+      background-position: right center;
+    }
+
+    /* ТЕПЕРЬ ЭТО ОГРАНИЧИТЕЛИ БУКВЫ I (ВЕРХ И НИЗ) */
+    .shard::before, .shard::after {
+      content: '';
+      position: absolute;
+      width: 35px; /* Сделал перекладины чуть шире для красоты */
+      height: 12px;
+      background: #444;
+      z-index: 10;
+      transition: background 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    /* Прижимаем их в самый верх (top: 0) и самый низ (bottom: 0) */
+    .shard.left::before { top: 0; right: 0; border-radius: 0 0 0 4px; }
+    .shard.left::after { bottom: 0; right: 0; border-radius: 4px 0 0 0; }
+
+    .shard.right::before { top: 0; left: 0; border-radius: 0 0 4px 0; }
+    .shard.right::after { bottom: 0; left: 0; border-radius: 0 4px 0 0; }
+
+    /* Панель ползунков */
+    .controls { display: flex; flex-direction: column; gap: 20px; }
+    .slider-group { display: flex; flex-direction: column; gap: 8px; }
+    .slider-group label { font-size: 12px; color: #00f3ff; display: flex; justify-content: space-between; }
+    input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #333; border-radius: 2px; }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; height: 20px; width: 10px;
+      background: var(--neon-cyan); cursor: pointer; margin-top: -8px;
+      box-shadow: 0 0 10px var(--neon-cyan);
+    }
+
+    /* =========================================
+       СОСТОЯНИЕ УСПЕХА (СИНХРОНИЗАЦИЯ)
+       ========================================= */
+    .module-split.synced .viewport {
+      background: var(--neon-cyan);
+      box-shadow: inset 0 0 30px rgba(0, 243, 255, 0.5);
+    }
+
+    .module-split.synced .shard {
+      border-color: var(--neon-cyan);
+      /* Мягкое затемнение через внутреннюю тень */
+      box-shadow: inset 0 0 0 1000px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Засечки загораются чистым неоном и сливаются с щелью */
+    .module-split.synced .shard::before,
+    .module-split.synced .shard::after {
+      background: var(--neon-cyan);
+      box-shadow: 0 0 15px var(--neon-cyan);
+    }
+
+    .module-split.synced .header {
+      color: var(--neon-cyan);
+      text-shadow: 0 0 10px var(--neon-cyan);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="module-split" id="splitModule">
+    <div class="header" id="statusHeader">FRACTURE_SYNC: OFFLINE</div>
+
+    <div class="viewport">
+      <div class="shard left" id="shardLeft"></div>
+      <div class="shard right" id="shardRight"></div>
+    </div>
+
+    <div class="controls">
+      <div class="slider-group">
+        <label><span>PHASE ALIGNMENT (X-AXIS)</span> <span id="valPhase">0%</span></label>
+        <input type="range" id="sliderPhase" min="0" max="100" value="0">
+      </div>
+      <div class="slider-group">
+        <label><span>FREQUENCY FOCUS (DISTORTION)</span> <span id="valFocus">0%</span></label>
+        <input type="range" id="sliderFocus" min="0" max="100" value="0">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sliderPhase = document.getElementById('sliderPhase');
+    const sliderFocus = document.getElementById('sliderFocus');
+    const shardLeft = document.getElementById('shardLeft');
+    const shardRight = document.getElementById('shardRight');
+    const splitModule = document.getElementById('splitModule');
+    const statusHeader = document.getElementById('statusHeader');
+    const valPhase = document.getElementById('valPhase');
+    const valFocus = document.getElementById('valFocus');
+
+    const TARGET_PHASE = 80;
+    const TARGET_FOCUS = 40;
+
+    function updateTransformations() {
+      const phase = parseInt(sliderPhase.value);
+      const focus = parseInt(sliderFocus.value);
+
+      valPhase.textContent = phase + '%';
+      valFocus.textContent = focus + '%';
+
+      const pCurved = Math.pow(phase / 100, 2) * 100;
+      const fCurved = Math.pow(focus / 100, 2) * 100;
+
+      const targetPhaseCurved = Math.pow(TARGET_PHASE / 100, 2) * 100;
+      const targetFocusCurved = Math.pow(TARGET_FOCUS / 100, 2) * 100;
+
+      const shiftX = Math.sin((pCurved - targetPhaseCurved) * 0.18) * 35;
+
+      const baseGap = 16;
+      const gapOffset = Math.abs(shiftX) + (baseGap / 2);
+
+      const skewDeg = Math.sin((fCurved - targetFocusCurved) * 0.25) * 20;
+      const blurPx = Math.abs(Math.sin((fCurved - targetFocusCurved) * 0.15)) * 6;
+      const hueShift = Math.sin((fCurved - targetFocusCurved) * 0.1) * 90;
+
+      shardLeft.style.transform = `translateX(-${gapOffset}px) skewY(${skewDeg}deg) scale(1.05)`;
+      shardLeft.style.filter = `blur(${blurPx}px) hue-rotate(${hueShift}deg)`;
+
+      shardRight.style.transform = `translateX(${gapOffset}px) skewY(-${skewDeg}deg) scale(1.05)`;
+      shardRight.style.filter = `blur(${blurPx}px) hue-rotate(-${hueShift}deg)`;
+
+      if (Math.abs(phase - TARGET_PHASE) <= 1 && Math.abs(focus - TARGET_FOCUS) <= 1) {
+        shardLeft.style.transform = `translateX(-${baseGap / 2}px) skewY(0deg) scale(1)`;
+        shardRight.style.transform = `translateX(${baseGap / 2}px) skewY(0deg) scale(1)`;
+
+        // Сбрасываем фильтры
+        shardLeft.style.filter = `none`;
+        shardRight.style.filter = `none`;
+
+        splitModule.classList.add('synced');
+        statusHeader.textContent = "FRACTURE_SYNC: STABLE // LETTER: I";
+      } else {
+        splitModule.classList.remove('synced');
+        statusHeader.textContent = "FRACTURE_SYNC: OFFLINE";
+      }
+    }
+
+    sliderPhase.addEventListener('input', updateTransformations);
+    sliderFocus.addEventListener('input', updateTransformations);
+    updateTransformations();
+  </script>
+</body>
+</html>

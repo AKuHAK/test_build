@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Co-Op Override // It Takes Two</title>
+  <style>
+    :root {
+      --bg-dark: #0a0a0c;
+      --cody-green: #6bc24b; /* Цвет Коди */
+      --may-red: #e84a5f;   /* Цвет Мэй */
+      --text-muted: #555;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: var(--bg-dark);
+      font-family: 'Courier New', Courier, monospace;
+      color: #fff;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Главный контейнер */
+    .module-coop {
+      width: 600px;
+      height: 350px;
+      background: #111;
+      border: 2px solid #333;
+      border-radius: 12px;
+      position: relative;
+      display: flex;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+      overflow: hidden;
+    }
+
+    /* Декоративная рамка ARG-терминала */
+    .module-coop::before {
+      content: 'MODULE_05 // SYNC_REQUIRED';
+      position: absolute;
+      top: -25px;
+      left: 0;
+      font-size: 12px;
+      color: #777;
+      letter-spacing: 2px;
+    }
+
+    /* Половинки сплит-скрина */
+    .split-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      transition: all 0.3s ease;
+      background: #161618;
+    }
+
+    /* Линия раздела (Split Line) */
+    .divider {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 4px;
+      height: 100%;
+      background: #222;
+      transform: translateX(-50%);
+      z-index: 10;
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Стили для стороны Коди */
+    .cody-side { border-right: 1px solid #000; }
+    .cody-side .key-hint { color: var(--text-muted); border-color: var(--text-muted); }
+
+    /* Стили для стороны Мэй */
+    .may-side { border-left: 1px solid #000; }
+    .may-side .key-hint { color: var(--text-muted); border-color: var(--text-muted); }
+
+    /* Индикатор клавиши */
+    .key-hint {
+      width: 60px;
+      height: 60px;
+      border: 2px dashed;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
+    }
+
+    .player-label {
+      font-size: 14px;
+      letter-spacing: 3px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      transition: color 0.3s;
+    }
+
+    /* =========================================
+       СОСТОЯНИЕ: КНОПКА ЗАЖАТА (АКТИВНОСТЬ)
+       ========================================= */
+    .cody-side.active {
+      background: radial-gradient(circle at center, rgba(107, 194, 75, 0.15) 0%, #161618 70%);
+    }
+    .cody-side.active .key-hint {
+      color: var(--cody-green);
+      border-color: var(--cody-green);
+      border-style: solid;
+      box-shadow: 0 0 20px rgba(107, 194, 75, 0.4);
+      transform: scale(0.95);
+    }
+    .cody-side.active .player-label { color: var(--cody-green); }
+
+    .may-side.active {
+      background: radial-gradient(circle at center, rgba(232, 74, 95, 0.15) 0%, #161618 70%);
+    }
+    .may-side.active .key-hint {
+      color: var(--may-red);
+      border-color: var(--may-red);
+      border-style: solid;
+      box-shadow: 0 0 20px rgba(232, 74, 95, 0.4);
+      transform: scale(0.95);
+    }
+    .may-side.active .player-label { color: var(--may-red); }
+
+    /* =========================================
+       СОСТОЯНИЕ УСПЕХА (ОБЕ КНОПКИ ЗАЖАТЫ)
+       ========================================= */
+    .success-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 10, 12, 0.95);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    .module-coop.synced .divider {
+      /* Линия раздела красиво расходится в стороны, открывая ответ */
+      width: 100%;
+      background: transparent;
+      border-left: 2px solid var(--cody-green);
+      border-right: 2px solid var(--may-red);
+      box-shadow: inset 20px 0 30px -20px var(--cody-green), inset -20px 0 30px -20px var(--may-red);
+    }
+
+    .module-coop.synced .success-overlay {
+      opacity: 1;
+      pointer-events: all;
+      transition-delay: 0.3s;
+    }
+
+    .result-letter {
+      font-size: 80px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 0 20px rgba(255,255,255,0.5);
+      margin-bottom: 20px;
+      letter-spacing: 10px;
+    }
+
+    /* Та самая мрачная цитата */
+    .dark-quote {
+      font-size: 14px;
+      color: #888;
+      font-style: italic;
+      letter-spacing: 2px;
+      text-align: center;
+      max-width: 80%;
+      line-height: 1.6;
+      /* Добавляем легкий глитч для пущего крипового эффекта */
+      animation: faint-glitch 3s infinite;
+    }
+
+    .dark-quote span {
+      color: #a33;
+    }
+
+    @keyframes faint-glitch {
+      0%, 95%, 100% { opacity: 1; transform: translate(0); }
+      96% { opacity: 0.8; transform: translate(-2px, 1px); }
+      97% { opacity: 0.9; transform: translate(2px, -1px); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="module-coop" id="coopModule">
+    <div class="divider"></div>
+
+    <div class="split-screen cody-side" id="codySide">
+      <div class="key-hint">C</div>
+      <div class="player-label">Player 1</div>
+    </div>
+
+    <div class="split-screen may-side" id="maySide">
+      <div class="key-hint">M</div>
+      <div class="player-label">Player 2</div>
+    </div>
+
+    <div class="success-overlay">
+      <div class="result-letter">T</div>
+      <div class="dark-quote">
+        "They killed the <span>elephant</span><br>to save their family."
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const codySide = document.getElementById('codySide');
+    const maySide = document.getElementById('maySide');
+    const coopModule = document.getElementById('coopModule');
+
+    // Состояние клавиш
+    let keys = {
+      c: false,
+      m: false
+    };
+
+    // Слушатель нажатия
+    window.addEventListener('keydown', (e) => {
+      // Игнорируем повторные срабатывания при удержании
+      if (e.repeat) return;
+
+      const key = e.key.toLowerCase();
+
+      if (key === 'c') {
+        keys.c = true;
+        codySide.classList.add('active');
+      }
+
+      if (key === 'm') {
+        keys.m = true;
+        maySide.classList.add('active');
+      }
+
+      // Если зажаты обе кнопки - магия сплит-скрина
+      if (keys.c && keys.m) {
+        coopModule.classList.add('synced');
+      }
+    });
+
+    // Слушатель отпускания
+    window.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase();
+
+      if (key === 'c') {
+        keys.c = false;
+        codySide.classList.remove('active');
+      }
+
+      if (key === 'm') {
+        keys.m = false;
+        maySide.classList.remove('active');
+      }
+
+      // Если хотя бы одну кнопку отпустили, разрываем синхронизацию
+      if (!keys.c || !keys.m) {
+        coopModule.classList.remove('synced');
+      }
+    });
+  </script>
+
+</body>
+</html>

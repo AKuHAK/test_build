@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Archive // Talos System</title>
+  <style>
+    :root {
+      --bg-void: #0a0908;
+      --gold-glow: #d4af37;
+      --gold-dim: #8a7b53;
+      --stone-surface: rgba(20, 18, 15, 0.75);
+      --error-red: #8b2626;
+      --decoy-green: #2ecc71; /* Цвет для цифры-обманки */
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg-void);
+      color: var(--gold-glow);
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-image:
+        radial-gradient(circle at center, #1a1714 0%, var(--bg-void) 100%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      overflow: hidden;
+    }
+
+    /* Экраны и оверлеи */
+    #bootScreen {
+      position: fixed; inset: 0; background: #000; z-index: 10000;
+      display: flex; justify-content: center; align-items: center; cursor: pointer;
+      transition: opacity 2s ease;
+    }
+
+    .boot-text {
+      font-family: 'Times New Roman', Times, serif; font-size: 18px; letter-spacing: 6px;
+      color: var(--gold-dim); text-transform: uppercase;
+      animation: slow-breathe 4s infinite ease-in-out;
+    }
+
+    @keyframes slow-breathe {
+      0%, 100% { opacity: 0.2; filter: blur(2px); }
+      50% { opacity: 1; filter: blur(0); text-shadow: 0 0 20px var(--gold-glow); }
+    }
+
+    .dust-particles {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(circle 1px at 20% 30%, var(--gold-dim) 1px, transparent 1px),
+                        radial-gradient(circle 1px at 70% 60%, var(--gold-dim) 1px, transparent 1px),
+                        radial-gradient(circle 2px at 40% 80%, var(--gold-dim) 1px, transparent 1px);
+      background-size: 200px 200px; opacity: 0.1; animation: drift 100s linear infinite;
+    }
+
+    @keyframes drift { from { transform: translateY(0); } to { transform: translateY(-200px); } }
+
+    /* Главный контейнер терминала */
+    .monolith-interface {
+      width: 100%; max-width: 900px; padding: 50px; position: relative; z-index: 10;
+      background: var(--stone-surface);
+      clip-path: polygon(0 20px, 20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%);
+      border-top: 1px solid var(--gold-dim); border-bottom: 1px solid var(--gold-dim);
+      box-shadow: inset 0 0 60px rgba(0,0,0,0.8); transition: opacity 1.5s ease;
+    }
+
+    .monolith-interface::before, .monolith-interface::after {
+      content: ''; position: absolute; width: 8px; height: 8px;
+      background: var(--gold-dim); transform: rotate(45deg);
+    }
+    .monolith-interface::before { top: 20px; left: 20px; }
+    .monolith-interface::after { bottom: 20px; right: 20px; }
+
+    .header { text-align: center; margin-bottom: 50px; position: relative; }
+
+    .header h1 {
+      font-family: 'Times New Roman', Times, serif; font-size: 32px; font-weight: normal; letter-spacing: 12px;
+      margin: 0 0 15px 0; text-transform: uppercase; color: var(--gold-glow);
+      text-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    }
+
+    .header p { font-size: 12px; letter-spacing: 4px; color: var(--gold-dim); margin: 0; transition: color 0.3s; }
+
+    .quote {
+      font-family: 'Times New Roman', Times, serif; font-style: italic; color: #777;
+      font-size: 14px; letter-spacing: 1px; margin-bottom: 40px; text-align: center;
+    }
+
+    /* Сетка поврежденных модулей */
+    .module-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 25px; margin-bottom: 60px;
+    }
+
+    .module-link {
+      display: block; padding: 25px 15px; text-decoration: none; color: var(--gold-dim);
+      text-align: center; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(212, 175, 55, 0.1);
+      position: relative; transition: all 0.4s ease; overflow: hidden; z-index: 20;
+    }
+
+    .module-link::before {
+      content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 0; height: 1px; background: var(--gold-glow); transition: width 0.4s ease;
+    }
+
+    .module-link:hover {
+      color: #fff; background: rgba(212, 175, 55, 0.05); border-color: rgba(212, 175, 55, 0.3);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5), inset 0 0 20px rgba(212, 175, 55, 0.1);
+    }
+    .module-link:hover::before { width: 80%; }
+    .module-link .id { font-size: 10px; opacity: 0.5; margin-bottom: 10px; display: block; letter-spacing: 2px; }
+    .module-link .name { font-family: 'Times New Roman', Times, serif; font-size: 16px; letter-spacing: 3px; }
+
+    /* Ввод пароля (Защитная зона) */
+    .final-input-zone { text-align: center; position: relative; z-index: 20; }
+    .final-input-zone::before {
+      content: ''; position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+      width: 100px; height: 1px; background: var(--gold-dim); opacity: 0.3;
+    }
+
+    .input-wrapper { display: flex; justify-content: center; align-items: flex-end; gap: 20px; margin-top: 25px; }
+
+    input[type="text"] {
+      background: transparent; border: none; border-bottom: 2px solid var(--gold-dim);
+      color: var(--gold-glow); font-family: 'Times New Roman', Times, serif; font-size: 28px;
+      padding: 5px 10px; width: 200px; text-align: center; letter-spacing: 12px;
+      text-transform: uppercase; outline: none; transition: all 0.3s;
+    }
+
+    input[type="text"]:focus { border-bottom-color: var(--gold-glow); box-shadow: 0 10px 10px -10px var(--gold-glow); }
+    input[type="text"]::placeholder { color: rgba(138, 123, 83, 0.2); }
+
+    button {
+      background: transparent; color: var(--gold-dim); border: 1px solid var(--gold-dim);
+      font-family: inherit; font-size: 12px; letter-spacing: 4px; padding: 12px 25px;
+      cursor: pointer; text-transform: uppercase; transition: all 0.3s;
+    }
+    button:hover { background: rgba(212, 175, 55, 0.1); color: var(--gold-glow); border-color: var(--gold-glow); }
+
+    #systemMessage { margin-top: 25px; min-height: 20px; font-size: 13px; letter-spacing: 3px; transition: color 0.3s; }
+
+    /* =========================================
+       ТАЙМЕР УСПЕХА (ДЛЯ SHIFT)
+       ========================================= */
+    #timerScreen {
+      position: fixed; inset: 0; background: var(--bg-void); z-index: 15000;
+      display: none; flex-direction: column; justify-content: center; align-items: center;
+      background-image: radial-gradient(circle at center, #1a1714 0%, var(--bg-void) 100%);
+      opacity: 0; transition: opacity 2s ease;
+    }
+    .timer-title {
+      font-family: 'Times New Roman', Times, serif; font-size: 20px; letter-spacing: 12px;
+      color: var(--gold-dim); margin-bottom: 40px; text-transform: uppercase;
+    }
+    .timer-countdown {
+      font-family: 'Times New Roman', Times, serif; font-size: 70px;
+      color: var(--gold-glow); text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+      letter-spacing: 6px; text-align: center;
+    }
+
+    /* =========================================
+       ПАСХАЛКА: БУКВЫ, ЦИФРЫ И ЭКРАН СБОЯ
+       ========================================= */
+    .bg-char {
+      position: fixed;
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 26px;
+      color: rgba(212, 175, 55, 0.08); /* Очень тусклые */
+      cursor: pointer;
+      z-index: 100;
+      user-select: none;
+      transition: color 0.3s, text-shadow 0.3s, transform 0.2s;
+    }
+
+    .bg-char:hover { color: rgba(212, 175, 55, 0.8); transform: scale(1.3); }
+
+    /* Целевые буквы при клике */
+    .bg-char.found {
+      color: var(--error-red) !important;
+      text-shadow: 0 0 20px var(--error-red);
+      pointer-events: none;
+      font-weight: bold;
+    }
+
+    /* Специальный класс для зеленой цифры-обманки */
+    .bg-char.green-decoy {
+      color: rgba(46, 204, 113, 0.2);
+    }
+    .bg-char.green-decoy:hover {
+      color: rgba(46, 204, 113, 0.9);
+      text-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
+    }
+
+    #easterEggScreen {
+      position: fixed; inset: 0; background: var(--bg-void); z-index: 20000;
+      display: none; flex-direction: column; justify-content: center; align-items: center;
+    }
+    #easterEggScreen.active { display: flex; animation: flash 0.15s 3; }
+
+    .glitch-text {
+      color: var(--error-red); font-family: 'Times New Roman', Times, serif; font-size: 32px;
+      letter-spacing: 5px; margin-bottom: 30px; text-transform: uppercase;
+      text-shadow: 2px 2px 0px rgba(212,175,55,0.5), -2px -2px 0px rgba(139,38,38,0.5);
+      animation: text-glitch 0.2s infinite;
+    }
+
+    .easter-image {
+      max-width: 80%; max-height: 70vh; border: 1px solid var(--error-red);
+      box-shadow: 0 0 50px rgba(139, 38, 38, 0.4);
+    }
+
+    @keyframes flash { 0%, 100% { background: var(--bg-void); } 50% { background: var(--error-red); } }
+    @keyframes text-glitch { 0% { transform: translate(0); } 33% { transform: translate(-3px, 1px); } 66% { transform: translate(3px, -1px); } 100% { transform: translate(0); } }
+  </style>
+</head>
+<body>
+
+  <audio id="bgMusic" loop>
+    <source src="bg-music.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="bootScreen">
+    <div class="boot-text">Touch to awaken the archive</div>
+  </div>
+
+  <div class="dust-particles"></div>
+
+  <div id="easterEggScreen">
+    <div class="glitch-text">CRITICAL SYSTEM FAILURE // PROTOCOL_ORACLE</div>
+    <img src="easter.png" alt="Easter Egg" class="easter-image">
+  </div>
+
+  <div id="timerScreen">
+    <div class="timer-title">Next Cycle Initiation</div>
+    <div class="timer-countdown" id="timerDisplay">00:00:00:00</div>
+  </div>
+
+  <div class="monolith-interface" id="mainTerminal">
+    <div class="header">
+      <h1>The Somnus Archive</h1>
+      <p id="degCounter">SYSTEM DEGRADATION AT 83%</p> </div>
+
+    <div class="quote">
+      "Memory is not a recording. It is a reconstruction."
+    </div>
+
+    <div class="module-grid">
+      <a href="silent-hill.html" class="module-link">
+        <span class="id">SECTOR_01</span>
+        <span class="name">LAKEVIEW</span>
+      </a>
+      <a href="detroit.html" class="module-link">
+        <span class="id">SECTOR_02</span>
+        <span class="name">CYBERLIFE</span>
+      </a>
+      <a href="split-fiction.html" class="module-link">
+        <span class="id">SECTOR_03</span>
+        <span class="name">FRACTURE</span>
+      </a>
+      <a href="blue-prince.html" class="module-link">
+        <span class="id">SECTOR_04</span>
+        <span class="name">DRAFT</span>
+      </a>
+      <a href="it-takes-two.html" class="module-link">
+        <span class="id">SECTOR_05</span>
+        <span class="name">CO-OP</span>
+      </a>
+    </div>
+
+    <div class="final-input-zone" id="safeZone">
+      <div style="font-size: 11px; letter-spacing: 3px; color: var(--gold-dim);">INPUT THE FINAL SEQUENCE TO RESTORE DATA</div>
+      <div class="input-wrapper">
+        <input type="text" id="finalCode" maxlength="5" autocomplete="off" placeholder=".....">
+        <button id="unlockBtn">Restore</button>
+      </div>
+      <div id="systemMessage"></div>
+    </div>
+  </div>
+
+  <script>
+    const bootScreen = document.getElementById('bootScreen');
+    const bgMusic = document.getElementById('bgMusic');
+
+    bootScreen.addEventListener('click', () => {
+      bgMusic.volume = 0.5;
+      bgMusic.play().catch(e => console.log("Audio play failed:", e));
+      bootScreen.style.opacity = '0';
+      setTimeout(() => {
+        bootScreen.style.display = 'none';
+        spawnEasterLetters(); // Генерируем буквы только когда экран загрузился, чтобы вычислить размеры
+      }, 2000);
+    });
+
+    /* =========================================
+       1. ЛОГИКА ТАЙМЕРА И ПАРОЛЯ SHIFT
+       ========================================= */
+    const targetHash = "U0hJRlQ=";
+    const input = document.getElementById('finalCode');
+    const btn = document.getElementById('unlockBtn');
+    const msg = document.getElementById('systemMessage');
+    const mainTerminal = document.getElementById('mainTerminal');
+    const timerScreen = document.getElementById('timerScreen');
+    const timerDisplay = document.getElementById('timerDisplay');
+
+    // Целевая дата: 31 июля 2026 года, 00:00:00
+    const targetDate = new Date("2026-07-31T00:00:00").getTime();
+
+    function startTimer() {
+      setInterval(() => {
+        const now = new Date().getTime();
+        const distance = targetDate - now;
+
+        if (distance < 0) {
+          timerDisplay.innerHTML = "THE TIME HAS COME";
+          return;
+        }
+
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        const fDays = String(days).padStart(2, '0');
+        const fHours = String(hours).padStart(2, '0');
+        const fMins = String(minutes).padStart(2, '0');
+        const fSecs = String(seconds).padStart(2, '0');
+
+        timerDisplay.innerHTML = `${fDays}D : ${fHours}H : ${fMins}M : ${fSecs}S`;
+      }, 1000);
+    }
+
+    function checkFinalCode() {
+      const val = input.value.trim().toUpperCase();
+      if (val.length !== 5) {
+        msg.style.color = "var(--error-red)";
+        msg.textContent = "INCOMPLETE SEQUENCE DETECTED.";
+        return;
+      }
+
+      msg.style.color = "var(--gold-dim)";
+      msg.textContent = "ANALYZING...";
+
+      setTimeout(() => {
+        if (btoa(val) === targetHash) {
+          msg.style.color = "#a3c79a";
+          msg.textContent = "ARCHIVE RESTORED. INITIATING PROTOCOL...";
+
+          setTimeout(() => {
+            mainTerminal.style.opacity = '0';
+            document.querySelectorAll('.bg-char').forEach(l => l.style.opacity = '0');
+
+            setTimeout(() => {
+              mainTerminal.style.display = 'none';
+              timerScreen.style.display = 'flex';
+              setTimeout(() => { timerScreen.style.opacity = '1'; }, 100);
+              startTimer();
+            }, 1500);
+          }, 1500);
+
+        } else {
+          msg.style.color = "var(--error-red)";
+          msg.textContent = "SEQUENCE REJECTED. DATA REMAINS CORRUPTED.";
+          input.value = '';
+        }
+      }, 1200);
+    }
+
+    btn.addEventListener('click', checkFinalCode);
+    input.addEventListener('keypress', (e) => { if (e.key === 'Enter') checkFinalCode(); });
+    input.addEventListener('input', () => { msg.textContent = ''; });
+
+    /* =========================================
+       2. ЛОГИКА ПАСХАЛКИ И ИЗБЕГАНИЯ ЗОНЫ ВВОДА
+       ========================================= */
+    const easterWord = "ORACLE";
+    let currentEasterIndex = 1; // Буква 'O' уже нажата
+    const degCounter = document.getElementById('degCounter');
+    const safeZoneElement = document.getElementById('safeZone');
+
+    // Функция, которая ищет безопасные координаты в пикселях (вдали от зоны ввода)
+    function getSafeCoords() {
+      const rect = safeZoneElement.getBoundingClientRect();
+      const padding = 30; // Отступ безопасности (в пикселях) вокруг блока ввода
+      let x, y, isOverlapping;
+
+      do {
+        // Генерируем x, y по всему экрану с небольшими отступами от краев окна
+        x = Math.random() * (window.innerWidth - 60) + 30;
+        y = Math.random() * (window.innerHeight - 60) + 30;
+
+        // Проверяем, не попали ли координаты в "защищенную" зону блока ввода
+        isOverlapping = (
+          x > (rect.left - padding) &&
+          x < (rect.right + padding) &&
+          y > (rect.top - padding) &&
+          y < (rect.bottom + padding)
+        );
+      } while (isOverlapping); // Если попали — рандомим заново
+
+      return { x: x + 'px', y: y + 'px' };
+    }
+
+    function spawnEasterLetters() {
+      const alphabet = "BDFGHIJKMNPQSTUVWXYZ"; // Без букв слова ORACLE
+      const digits = "0123456789";
+      const itemsToSpawn = [];
+
+      // 1. Добавляем букву O (она будет нажатой)
+      itemsToSpawn.push({ char: 'O', type: 'first' });
+
+      // 2. Добавляем остальные R, A, C, L, E
+      for (let i = 1; i < easterWord.length; i++) {
+        itemsToSpawn.push({ char: easterWord[i], type: 'target' });
+      }
+
+      // 3. Добавляем ОДНУ зеленую цифру-обманку
+      itemsToSpawn.push({ char: digits[Math.floor(Math.random() * 10)], type: 'decoy' });
+
+      // 4. Добиваем массив до 30 элементов шумом (буквами и цифрами)
+      while (itemsToSpawn.length < 30) {
+        if (Math.random() > 0.4) {
+          itemsToSpawn.push({ char: alphabet[Math.floor(Math.random() * alphabet.length)], type: 'noise' });
+        } else {
+          itemsToSpawn.push({ char: digits[Math.floor(Math.random() * 10)], type: 'noise' });
+        }
+      }
+
+      // Перемешиваем массив, чтобы они появлялись в DOM в случайном порядке
+      for (let i = itemsToSpawn.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [itemsToSpawn[i], itemsToSpawn[j]] = [itemsToSpawn[j], itemsToSpawn[i]];
+      }
+
+      // Отрисовываем каждый символ
+      itemsToSpawn.forEach(item => {
+        const span = document.createElement('span');
+        span.textContent = item.char;
+        span.className = 'bg-char';
+
+        // Если это буква O
+        if (item.type === 'first') {
+          span.classList.add('found');
+        }
+        // Если это зеленая обманка
+        else if (item.type === 'decoy') {
+          span.classList.add('green-decoy');
+        }
+
+        // Вычисляем безопасные координаты и применяем их
+        const coords = getSafeCoords();
+        span.style.left = coords.x;
+        span.style.top = coords.y;
+
+        // Обработчик клика только для целевых букв ORACLE
+        span.addEventListener('click', () => handleCharClick(span, item.char, item.type));
+
+        document.body.appendChild(span);
+      });
+    }
+
+    function handleCharClick(spanElement, char, type) {
+      if (type === 'target' && char === easterWord[currentEasterIndex]) {
+        spanElement.classList.add('found');
+        currentEasterIndex++;
+
+        const degradation = Math.floor(100 - (currentEasterIndex * (100 / easterWord.length)));
+        degCounter.textContent = `SYSTEM DEGRADATION AT ${degradation}%`;
+
+        if (degradation < 50) degCounter.style.color = "var(--error-red)";
+
+        if (currentEasterIndex === easterWord.length) {
+          setTimeout(triggerSystemCollapse, 600);
+        }
+      }
+    }
+
+    function triggerSystemCollapse() {
+      document.getElementById('mainTerminal').style.display = 'none';
+      document.querySelectorAll('.bg-char').forEach(el => el.style.display = 'none');
+      document.getElementById('easterEggScreen').classList.add('active');
+    }
+
+    // Обратите внимание: spawnEasterLetters() теперь вызывается после растворения черного экрана
+  </script>
+</body>
+</html>

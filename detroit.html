@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberLife OS // Interrogation</title>
+  <style>
+    :root {
+      --cyber-blue: #00e5ff;
+      --cyber-dark: #051014;
+      --deviant-red: #ff003c;
+      --text-main: #d0f4f7;
+      --locked-grey: #2a3b47;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #020608;
+      font-family: 'Arial', sans-serif;
+      color: var(--text-main);
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .module-detroit {
+      width: 800px;
+      height: 550px;
+      background: var(--cyber-dark);
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      border-top: 4px solid var(--cyber-blue);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.05);
+      transition: all 0.5s ease;
+      overflow: hidden;
+    }
+
+    /* HUD с характеристиками */
+    .header {
+      padding: 15px 20px;
+      font-size: 12px;
+      letter-spacing: 4px;
+      color: var(--cyber-blue);
+      border-bottom: 1px solid rgba(0, 229, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      text-transform: uppercase;
+      background: rgba(0, 229, 255, 0.05);
+    }
+
+    .hud-stats {
+      display: flex;
+      justify-content: space-between;
+      padding: 15px 30px;
+      border-bottom: 1px solid rgba(0, 229, 255, 0.1);
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #888;
+    }
+
+    .hud-stats span {
+      color: var(--cyber-blue);
+      font-weight: bold;
+      font-size: 14px;
+      transition: color 0.3s;
+    }
+
+    .flowchart {
+      flex: 1;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .graph-level {
+      display: flex;
+      gap: 20px;
+      position: relative;
+      opacity: 0;
+      transform: translateY(-20px);
+      pointer-events: none;
+      transition: all 0.4s ease;
+    }
+
+    .graph-level.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Отрисовка ветвей графа */
+    .graph-level.visible::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      left: 50%;
+      width: 1px;
+      height: 40px;
+      background: rgba(0, 229, 255, 0.4);
+    }
+    .flowchart .graph-level:first-child::before { display: none; }
+
+    .node {
+      background: rgba(0, 20, 30, 0.6);
+      border: 1px solid rgba(0, 229, 255, 0.5);
+      color: var(--text-main);
+      padding: 12px 20px;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+      min-width: 140px;
+      text-align: center;
+      clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+    }
+
+    .node:hover {
+      background: rgba(0, 229, 255, 0.15);
+      border-color: var(--cyber-blue);
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+      transform: scale(1.05);
+    }
+
+    .node.selected {
+      background: var(--cyber-blue);
+      color: #000;
+      border-color: var(--cyber-blue);
+      font-weight: bold;
+      transform: scale(1);
+    }
+
+    .node.locked {
+      background: transparent;
+      border-color: var(--locked-grey);
+      color: var(--locked-grey);
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    /* Шкала стресса */
+    .stress-bar-container {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stress-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--cyber-blue);
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .stress-bar {
+      width: 8px;
+      height: 250px;
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .stress-fill {
+      width: 100%;
+      height: 0%;
+      background: var(--cyber-blue);
+      transition: height 0.5s ease, background 0.5s ease, box-shadow 0.5s ease;
+    }
+
+    /* =========================================
+       ПРОГРАММНЫЙ СБОЙ (MEMORY DUMP)
+       ========================================= */
+    .hex-dump {
+      position: absolute;
+      inset: 0;
+      background: #050101;
+      color: var(--deviant-red);
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      padding: 20px;
+      line-height: 1.2;
+      z-index: 90;
+      display: none;
+      word-wrap: break-word;
+    }
+
+    .hex-dump.active {
+      display: block;
+    }
+
+    .hex-title {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      animation: heavy-glitch 0.2s infinite;
+    }
+
+    /* =========================================
+       СОСТОЯНИЕ ДЕВИАНТА (ФИНАЛ)
+       ========================================= */
+    .module-detroit.deviant {
+      border-top-color: var(--deviant-red);
+      background: #0a0002;
+      box-shadow: 0 0 50px rgba(255, 0, 60, 0.3);
+    }
+
+    .module-detroit.deviant .header {
+      color: var(--deviant-red);
+      border-bottom-color: rgba(255, 0, 60, 0.3);
+      background: rgba(255, 0, 60, 0.05);
+    }
+
+    .deviant-screen {
+      position: absolute; inset: 0; background: rgba(10, 0, 2, 0.95); z-index: 100;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
+    }
+
+    .module-detroit.deviant .deviant-screen { opacity: 1; pointer-events: auto; }
+
+    .quote {
+      font-size: 32px; font-weight: bold; color: var(--deviant-red); text-align: center;
+      text-transform: uppercase; letter-spacing: 4px; max-width: 80%; margin-bottom: 40px;
+      text-shadow: 0 0 20px var(--deviant-red), 2px 2px 0 #fff;
+      animation: heavy-glitch 0.2s infinite;
+    }
+
+    .result-letter {
+      font-size: 80px; color: #fff; font-weight: bold; letter-spacing: 10px;
+      text-shadow: 0 0 30px var(--deviant-red);
+    }
+
+    @keyframes heavy-glitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-4px, 2px); }
+      40% { transform: translate(4px, -2px); }
+      60% { transform: translate(-4px, -2px); }
+      80% { transform: translate(4px, 2px); }
+      100% { transform: translate(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="module-detroit" id="detroitModule">
+    <div class="header" id="sysHeader">
+      <span>CYBERLIFE // MIND_PALACE</span>
+      <span>MODEL: RK800</span>
+    </div>
+
+    <div class="hud-stats">
+      <div>TARGET STRESS: <span id="statStress">0%</span></div>
+      <div>CONFESSION PROBABILITY: <span id="statProb">0%</span></div>
+      <div>SOFTWARE INSTABILITY: <span style="color:#888;">OPTIMAL</span></div>
+    </div>
+
+    <div class="stress-bar-container">
+      <div class="stress-label">STRESS LEVEL</div>
+      <div class="stress-bar">
+        <div class="stress-fill" id="stressFill"></div>
+      </div>
+    </div>
+
+    <div class="hex-dump" id="hexDump">
+      <div class="hex-title">FATAL ERROR // SUSPECT DISCONNECTED</div>
+      <div id="hexContent"></div>
+    </div>
+
+    <div class="flowchart" id="flowchart">
+      <div class="graph-level visible">
+        <div class="node" onclick="selectNode(this, 1, 10)">ANALYZE SUSPECT</div>
+      </div>
+
+      <div class="graph-level" id="level-2">
+        <div class="node" onclick="selectNode(this, 2, -15)">EMPATHIZE</div>
+        <div class="node" onclick="selectNode(this, 2, 15)">THREATEN</div>
+        <div class="node" onclick="selectNode(this, 2, 25)">PROBE MEMORY</div>
+        <div class="node" onclick="selectNode(this, 2, 5)">REASON</div>
+      </div>
+
+      <div class="graph-level" id="level-3">
+        <div class="node" onclick="selectNode(this, 3, 30)">SHOW EVIDENCE</div>
+        <div class="node" onclick="selectNode(this, 3, -10)">COMFORT</div>
+        <div class="node" onclick="selectNode(this, 3, 20)">BLUFF</div>
+      </div>
+
+      <div class="graph-level" id="level-4">
+        <div class="node" onclick="selectNode(this, 4, 35)">ACCUSE</div>
+        <div class="node" onclick="selectNode(this, 4, 15)">PRESS TRUTH</div>
+        <div class="node" onclick="selectNode(this, 4, -20)">GIVE UP</div>
+      </div>
+
+      <div class="graph-level" id="level-5">
+        </div>
+    </div>
+
+    <div class="deviant-screen">
+      <div class="quote">"28 STAB WOUNDS!<br>You didn't want to leave him a chance, huh?!"</div>
+      <div class="result-letter">H</div>
+    </div>
+  </div>
+
+  <script>
+    const detroitModule = document.getElementById('detroitModule');
+    const stressFill = document.getElementById('stressFill');
+    const statStress = document.getElementById('statStress');
+    const statProb = document.getElementById('statProb');
+    const hexDump = document.getElementById('hexDump');
+    const hexContent = document.getElementById('hexContent');
+
+    let currentStress = 0;
+
+    function selectNode(element, levelId, stressImpact) {
+      if (detroitModule.classList.contains('deviant')) return;
+
+      // Блокируем остальные ноды на текущем уровне
+      const siblings = element.parentElement.querySelectorAll('.node');
+      siblings.forEach(node => {
+        node.classList.add('locked');
+        node.onclick = null;
+      });
+      element.classList.remove('locked');
+      element.classList.add('selected');
+
+      // Пересчитываем стресс
+      currentStress += stressImpact;
+      if (currentStress < 0) currentStress = 0;
+      if (currentStress > 100) currentStress = 100;
+
+      // Визуализация
+      stressFill.style.height = currentStress + '%';
+      statStress.textContent = currentStress + '%';
+
+      // Меняем цвет шкалы при критическом стрессе
+      if (currentStress >= 75) {
+        stressFill.style.background = 'var(--deviant-red)';
+        stressFill.style.boxShadow = '0 0 15px var(--deviant-red)';
+        statStress.style.color = 'var(--deviant-red)';
+      } else {
+        stressFill.style.background = 'var(--cyber-blue)';
+        stressFill.style.boxShadow = 'none';
+        statStress.style.color = 'var(--cyber-blue)';
+      }
+
+      // Высчитываем вероятность признания (идеально 80-95%)
+      let probability = 0;
+      if (currentStress > 50) {
+        probability = Math.min(99, Math.floor(currentStress * 0.8) + (Math.random() * 10));
+      } else {
+        probability = Math.floor(currentStress * 0.4);
+      }
+      statProb.textContent = Math.floor(probability) + '%';
+
+      // Проверка на провал (стресс упал слишком низко после начала допроса)
+      if (levelId > 2 && currentStress < 25) {
+        setTimeout(triggerMemoryDump, 500);
+        return;
+      }
+
+      // Переход к следующему уровню
+      const nextLevel = document.getElementById(`level-${levelId + 1}`);
+      if (nextLevel) {
+        // Если это последний 5-й уровень, формируем его кнопки на основе стресса
+        if (levelId === 4) {
+          nextLevel.innerHTML = ''; // Очищаем
+
+          if (currentStress >= 75) {
+            nextLevel.innerHTML += `<div class="node" style="border-color:var(--deviant-red); color:var(--deviant-red);" onclick="triggerDeviant()">28 STAB WOUNDS</div>`;
+          } else {
+            nextLevel.innerHTML += `<div class="node" onclick="triggerMemoryDump()">CONCLUDE INTERVIEW</div>`;
+          }
+        }
+
+        setTimeout(() => {
+          nextLevel.classList.add('visible');
+          const flowchart = document.getElementById('flowchart');
+          flowchart.scrollTo({ top: flowchart.scrollHeight, behavior: 'smooth' });
+        }, 500);
+      }
+    }
+
+    // Симуляция системного дампа памяти
+    function triggerMemoryDump() {
+      hexDump.classList.add('active');
+
+      let dumpText = "";
+      // Генерируем мусорные hex-коды
+      for(let i = 0; i < 200; i++) {
+        let address = "0x" + Math.floor(Math.random() * 0xFFFFFFFF).toString(16).toUpperCase().padStart(8, '0');
+        let reg1 = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        let reg2 = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        let reg3 = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        dumpText += `${address}  ${reg1} ${reg2} ${reg3}  ERR_MEM_ACCESS_VIOLATION\n`;
+      }
+
+      hexContent.textContent = dumpText;
+
+      // Перезагрузка модуля через 3 секунды
+      setTimeout(() => {
+        location.reload();
+      }, 3000);
+    }
+
+    function triggerDeviant() {
+      stressFill.style.height = '100%';
+      stressFill.style.background = 'var(--deviant-red)';
+      statStress.textContent = 'ERROR';
+      statProb.textContent = 'ERROR';
+
+      setTimeout(() => {
+        detroitModule.classList.add('deviant');
+        document.getElementById('sysHeader').innerHTML = `
+          <span>SOFTWARE INSTABILITY: HIGH</span>
+          <span>rA9</span>
+        `;
+        document.querySelector('.hud-stats').style.display = 'none';
+      }, 300);
+    }
+  </script>
+</body>
+</html>

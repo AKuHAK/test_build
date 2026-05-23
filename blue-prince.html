@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blueprint // Drafting Mode</title>
+  <style>
+    :root {
+      --bp-bg: #111a26;
+      --bp-line: #2a415e;
+      --bp-text: #8aa9c9;
+      --bp-highlight: #5bc0eb;
+      --bp-success: #fde74c;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: #080c12;
+      font-family: 'Courier New', Courier, monospace;
+      color: var(--bp-text);
+      user-select: none;
+    }
+
+    /* Фон в стиле синьки (blueprint) */
+    .blueprint-wrapper {
+      position: relative;
+      background-color: var(--bp-bg);
+      background-image:
+        linear-gradient(var(--bp-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--bp-line) 1px, transparent 1px);
+      background-size: 20px 20px;
+      border: 2px solid var(--bp-highlight);
+      padding: 40px;
+      display: flex;
+      gap: 40px;
+      box-shadow: 0 0 40px rgba(91, 192, 235, 0.15);
+      max-width: 800px;
+    }
+
+    /* Декоративные уголки */
+    .blueprint-wrapper::before,
+    .blueprint-wrapper::after {
+      content: ''; position: absolute; width: 15px; height: 15px; border: 2px solid var(--bp-highlight);
+    }
+    .blueprint-wrapper::before { top: 10px; left: 10px; border-right: none; border-bottom: none; }
+    .blueprint-wrapper::after { bottom: 10px; right: 10px; border-left: none; border-top: none; }
+
+    /* Панель с подсказками */
+    .memo-panel {
+      flex: 1;
+      max-width: 300px;
+      background: rgba(8, 12, 18, 0.6);
+      padding: 20px;
+      border: 1px dashed var(--bp-line);
+    }
+
+    .memo-title {
+      font-size: 18px;
+      color: #fff;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--bp-line);
+      padding-bottom: 10px;
+      letter-spacing: 2px;
+    }
+
+    .memo-text {
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .memo-text ul {
+      padding-left: 15px;
+      margin-top: 15px;
+    }
+    .memo-text li {
+      margin-bottom: 12px;
+    }
+
+    /* Сетка чертежа */
+    .grid-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .drafting-grid {
+      display: grid;
+      /* 6 колонок/строк: 1 для лейблов + 5 для самих клеток */
+      grid-template-columns: 30px repeat(5, 50px);
+      grid-template-rows: 30px repeat(5, 50px);
+      gap: 4px;
+    }
+
+    .label {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      color: var(--bp-line);
+      font-weight: bold;
+    }
+
+    .cell {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--bp-line);
+      cursor: crosshair;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .cell:hover {
+      background: rgba(91, 192, 235, 0.1);
+      border-color: var(--bp-highlight);
+    }
+
+    /* Состояние "Заштриховано" (Drafted) */
+    .cell.drafted {
+      background: repeating-linear-gradient(
+        45deg,
+        rgba(91, 192, 235, 0.2),
+        rgba(91, 192, 235, 0.2) 4px,
+        rgba(91, 192, 235, 0.6) 4px,
+        rgba(91, 192, 235, 0.6) 6px
+      );
+      border: 1px solid var(--bp-highlight);
+      box-shadow: inset 0 0 10px rgba(91, 192, 235, 0.3);
+    }
+
+    /* =========================================
+       СОСТОЯНИЕ УСПЕХА (КОГДА БУКВА СОБРАНА)
+       ========================================= */
+    .blueprint-wrapper.solved .cell {
+      pointer-events: none; /* Блокируем клики */
+    }
+
+    .blueprint-wrapper.solved .cell:not(.drafted) {
+      opacity: 0.1;
+      border-color: transparent;
+    }
+
+    .blueprint-wrapper.solved .cell.drafted {
+      background: var(--bp-success);
+      border: none;
+      box-shadow: 0 0 20px var(--bp-success);
+      /* Убираем штриховку, делаем сплошную заливку */
+    }
+
+    .success-msg {
+      display: none;
+      margin-top: 20px;
+      color: var(--bp-success);
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      text-align: center;
+      animation: pulse 1.5s infinite;
+    }
+
+    .blueprint-wrapper.solved .success-msg {
+      display: block;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; text-shadow: 0 0 10px var(--bp-success); }
+      50% { opacity: 0.5; text-shadow: 0 0 2px var(--bp-success); }
+    }
+
+    /* Адаптив для мелких экранов */
+    @media (max-width: 600px) {
+      .blueprint-wrapper { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blueprint-wrapper" id="blueprintWrapper">
+    <!-- Записка архитектора с подсказками -->
+    <div class="memo-panel">
+      <div class="memo-title">ARCHITECT'S NOTE v4</div>
+      <div class="memo-text">
+        The original floor plan was rejected for being too literal. To reveal the structure's true form, draft the rooms following these rules:
+        <ul>
+          <li>The primary load-bearing wall occupies the entirety of Axis 2.</li>
+          <li>The north facade extends East along Sector A, terminating at Axis 4.</li>
+          <li>A single observation room protrudes East at Sector C, from the exact midpoint of the primary wall.</li>
+          <li>All other zones are unstable void. Do not draft in the void.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Интерактивная сетка чертежа -->
+    <div class="grid-panel">
+      <div class="drafting-grid" id="grid">
+        <!-- Сетка генерируется через JavaScript -->
+      </div>
+      <div class="success-msg">FORM IS STABLE</div>
+    </div>
+  </div>
+
+  <script>
+    const gridContainer = document.getElementById('grid');
+    const wrapper = document.getElementById('blueprintWrapper');
+
+    const rows = ['A', 'B', 'C', 'D', 'E'];
+    const cols = ['1', '2', '3', '4', '5'];
+
+    // Правильное решение (координаты клеток, образующих букву F)
+    // A2, A3, A4 (Верхняя перекладина)
+    // B2, C2, D2, E2 (Вертикальная линия)
+    // C3 (Средняя короткая перекладина)
+    const solution = ['A2', 'A3', 'A4', 'B2', 'C2', 'C3', 'D2', 'E2'];
+
+    // Генерация сетки
+    function initGrid() {
+      // Пустая верхняя левая ячейка
+      const emptyCorner = document.createElement('div');
+      gridContainer.appendChild(emptyCorner);
+
+      // Генерация верхних лейблов (1, 2, 3, 4, 5)
+      cols.forEach(col => {
+        const label = document.createElement('div');
+        label.className = 'label';
+        label.textContent = col;
+        gridContainer.appendChild(label);
+      });
+
+      // Генерация строк с клетками
+      rows.forEach(row => {
+        // Лейбл строки (A, B, C...)
+        const rowLabel = document.createElement('div');
+        rowLabel.className = 'label';
+        rowLabel.textContent = row;
+        gridContainer.appendChild(rowLabel);
+
+        // Клетки для штриховки
+        cols.forEach(col => {
+          const cellId = row + col; // Например, 'A1', 'C3'
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.id = cellId;
+
+          // Обработчик клика по клетке
+          cell.addEventListener('mousedown', () => {
+            // Если загадка уже решена, клики не работают
+            if (wrapper.classList.contains('solved')) return;
+
+            // Переключаем класс (заштриховано / пусто)
+            cell.classList.toggle('drafted');
+
+            // Проверяем решение после каждого клика
+            checkWinCondition();
+          });
+
+          gridContainer.appendChild(cell);
+        });
+      });
+    }
+
+    // Проверка, собрал ли игрок правильный узор
+    function checkWinCondition() {
+      // Собираем ID всех заштрихованных клеток
+      const draftedCells = Array.from(document.querySelectorAll('.cell.drafted')).map(cell => cell.dataset.id);
+
+      // Если количество заштрихованных клеток не совпадает с решением - выходим
+      if (draftedCells.length !== solution.length) return;
+
+      // Проверяем, содержит ли массив draftedCells ВСЕ элементы из solution
+      const isCorrect = solution.every(id => draftedCells.includes(id));
+
+      if (isCorrect) {
+        // Включаем победную анимацию
+        wrapper.classList.add('solved');
+
+        // В реальной ARG тут можно сохранить прогресс в localStorage или разблокировать следующий модуль
+        console.log("Blue Prince module cleared. Hidden letter: F");
+      }
+    }
+
+    // Инициализируем сетку при загрузке
+    initGrid();
+  </script>
+
+</body>
+</html>
