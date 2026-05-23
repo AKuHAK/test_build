@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Restless Dreams // Silent Hill 2</title>
   <style>
     :root {
@@ -20,15 +20,27 @@
       justify-content: center;
       align-items: center;
       background-color: #030303;
-      font-family: 'Times New Roman', Times, serif; /* Винтажный, книжный шрифт для атмосферы */
+      font-family: 'Times New Roman', Times, serif;
       color: #fff;
       overflow: hidden;
       user-select: none;
+      /* Отключаем системные жесты (назад/вперед свайпом) */
+      touch-action: none;
     }
+
+    /* Кнопка возврата в Hub */
+    .btn-return {
+      position: fixed; top: 10px; left: 10px; color: #555; text-decoration: none;
+      font-family: monospace; background: rgba(0,0,0,0.8); padding: 5px 10px;
+      border: 1px solid #333; z-index: 9999; font-size: 10px; letter-spacing: 1px;
+      transition: color 0.3s, border-color 0.3s;
+    }
+    .btn-return:hover { color: #fff; border-color: #666; }
 
     /* Контейнер модуля */
     .module-sh2 {
-      width: 600px;
+      width: 95%;
+      max-width: 600px;
       height: 400px;
       background: var(--sh-dark);
       border: 1px solid #1c1412;
@@ -55,7 +67,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 40px;
+      padding: 30px;
       box-sizing: border-box;
     }
 
@@ -75,14 +87,12 @@
       line-height: 1.8;
       letter-spacing: 3px;
       color: #8a817c;
-      /* Эффект размытого сознания */
       filter: blur(1px);
       text-shadow: 0 0 10px rgba(255,255,255,0.1);
       animation: pulse-mind 4s infinite ease-in-out;
-      max-width: 85%;
+      max-width: 90%;
     }
 
-    /* Скрытая буква S */
     .target-letter {
       font-weight: bold;
       color: #aaa;
@@ -97,6 +107,7 @@
       height: 100%;
       z-index: 10;
       cursor: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 10 10"%3E%3Ccircle cx="5" cy="5" r="2" fill="white"/%3E%3C/svg%3E'), auto;
+      touch-action: none;
     }
 
     /* =========================================
@@ -128,9 +139,16 @@
       0%, 100% { filter: blur(1px); opacity: 0.8; transform: scale(1); }
       50% { filter: blur(2.5px); opacity: 0.5; transform: scale(0.98); }
     }
+
+    @media (max-width: 600px) {
+      .module-sh2 { height: 70vh; }
+      .quote-text { font-size: 18px; letter-spacing: 2px; }
+    }
   </style>
 </head>
 <body>
+
+  <a href="index.html" class="btn-return">◄ HUB</a>
 
   <div class="module-sh2" id="shModule">
     <div class="header">SIGNAL_LOST // LAKEVIEW</div>
@@ -149,32 +167,34 @@
     const canvas = document.getElementById('fogCanvas');
     const ctx = canvas.getContext('2d');
     const moduleContainer = document.getElementById('shModule');
-    const secretLetter = document.getElementById('secretLetter');
 
     let width, height;
     let isDrawing = false;
     let clearedPixelsTarget = 0;
     let winTriggered = false;
 
-    // Подгоняем размер холста под контейнер
+    // Вычисляем точные размеры для отрисовки тумана
     function resize() {
-      width = canvas.width = moduleContainer.clientWidth;
-      height = canvas.height = moduleContainer.clientHeight;
-      fillFogInitial();
+      const rect = moduleContainer.getBoundingClientRect();
+      width = canvas.width = rect.width;
+      height = canvas.height = rect.height;
+      if (!winTriggered) fillFogInitial();
     }
 
-    // Первоначальное заполнение холста густым текстурным туманом
+    window.addEventListener('resize', resize);
+
     function fillFogInitial() {
-      ctx.fillStyle = '#262321'; // Базовый темный цвет смога
+      if (width === 0 || height === 0) return; // Защита от нулевого размера
+
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#262321';
       ctx.fillRect(0, 0, width, height);
 
-      // Генерируем клубы тумана случайными полупрозрачными кругами
       for (let i = 0; i < 150; i++) {
         drawFogPuff(Math.random() * width, Math.random() * height, 50 + Math.random() * 60, 0.15);
       }
     }
 
-    // Рисование одной "частицы" тумана (мягкий градиентный круг)
     function drawFogPuff(x, y, radius, opacity) {
       let grad = ctx.createRadialGradient(x, y, 0, x, y, radius);
       grad.addColorStop(0, `rgba(110, 106, 102, ${opacity})`);
@@ -188,15 +208,11 @@
       ctx.fill();
     }
 
-    // Функция стирания тумана (протирка окна)
     function wipeFog(x, y) {
       if (winTriggered) return;
 
-      // Стираем туман с помощью специального режима наложения
       ctx.globalCompositeOperation = 'destination-out';
-
-      // Создаем эффект размытой кисти для стирания
-      let brushRadius = 35;
+      let brushRadius = 40;
       let grad = ctx.createRadialGradient(x, y, 0, x, y, brushRadius);
       grad.addColorStop(0, 'rgba(0,0,0,1)');
       grad.addColorStop(1, 'rgba(0,0,0,0)');
@@ -206,64 +222,58 @@
       ctx.arc(x, y, brushRadius, 0, Math.PI * 2);
       ctx.fill();
 
-      // Проверяем, очистил ли игрок центр экрана, где находится буква S
       checkCenterCleared(x, y);
     }
 
-    // Логика проверки: если игрок активно трет область вокруг буквы S
     function checkCenterCleared(x, y) {
       const centerX = width / 2;
       const centerY = height / 2;
-
-      // Дистанция от клика до центра буквы
       const dist = Math.hypot(x - centerX, y - centerY);
 
       if (dist < 60) {
         clearedPixelsTarget += 1;
-        // Если игрок сделал достаточно движений в центре (очистил его)
         if (clearedPixelsTarget > 45) {
           triggerWin();
         }
       }
     }
 
-    // Победа: туман плавно рассеивается насовсем
     function triggerWin() {
       winTriggered = true;
       moduleContainer.classList.add('cleared');
 
-      // Анимация плавного исчезновения остатков тумана
+      let fadeCount = 0;
       let fadeInterval = setInterval(() => {
         ctx.globalCompositeOperation = 'destination-out';
         ctx.fillStyle = 'rgba(0,0,0,0.1)';
         ctx.fillRect(0, 0, width, height);
 
-        // Когда холст полностью чист — останавливаем
-        if (secretLetter.style.color === 'var(--sh-blood)') {
+        fadeCount++;
+        // После 30 циклов (около секунды) туман гарантированно стирается и цикл завершается
+        if (fadeCount >= 30) {
           clearInterval(fadeInterval);
         }
       }, 30);
     }
 
-    // ФИЗИКА ТУМАНА: Постоянное возвращение тумана (регенерация)
     function simulateFogPhysics() {
       if (winTriggered) return;
 
-      // Каждые несколько кадров на холсте случайно материализуются новые клубы тумана,
-      // затягивая обратно протертые места
       if (Math.random() < 0.4) {
-        // Просчитываем случайные координаты, смещенные к краям или центру
         let x = Math.random() * width;
         let y = Math.random() * height;
         let radius = 40 + Math.random() * 50;
-        drawFogPuff(x, y, radius, 0.015); // Очень блеклый, но частый наплыв
+        drawFogPuff(x, y, radius, 0.015);
       }
-
       requestAnimationFrame(simulateFogPhysics);
     }
 
-    // Слушатели мыши / тача
-    canvas.addEventListener('mousedown', (e) => { isDrawing = true; const r = canvas.getBoundingClientRect(); wipeFog(e.clientX - r.left, e.clientY - r.top); });
+    // Обработчики событий (Мышь)
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      const r = canvas.getBoundingClientRect();
+      wipeFog(e.clientX - r.left, e.clientY - r.top);
+    });
     window.addEventListener('mouseup', () => isDrawing = false);
     canvas.addEventListener('mousemove', (e) => {
       if (!isDrawing) return;
@@ -271,8 +281,12 @@
       wipeFog(e.clientX - r.left, e.clientY - r.top);
     });
 
-    // Поддержка мобильных устройств
-    canvas.addEventListener('touchstart', (e) => { isDrawing = true; const r = canvas.getBoundingClientRect(); wipeFog(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top); }, {passive: true});
+    // Обработчики событий (Тачскрин)
+    canvas.addEventListener('touchstart', (e) => {
+      isDrawing = true;
+      const r = canvas.getBoundingClientRect();
+      wipeFog(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+    }, {passive: true});
     window.addEventListener('touchend', () => isDrawing = false);
     canvas.addEventListener('touchmove', (e) => {
       if (!isDrawing) return;
@@ -280,10 +294,13 @@
       wipeFog(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
     }, {passive: true});
 
-    // Запуск
-    resize();
-    simulateFogPhysics();
+    // Запускаем скрипт только после того, как браузер полностью отрендерил страницу
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        resize();
+        simulateFogPhysics();
+      }, 100);
+    });
   </script>
-
 </body>
 </html>

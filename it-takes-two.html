@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Co-Op Override // It Takes Two</title>
   <style>
     :root {
       --bg-dark: #0a0a0c;
-      --cody-green: #6bc24b; /* Цвет Коди */
-      --may-red: #e84a5f;   /* Цвет Мэй */
+      --cody-green: #6bc24b;
+      --may-red: #e84a5f;
       --text-muted: #555;
     }
 
@@ -22,12 +22,25 @@
       font-family: 'Courier New', Courier, monospace;
       color: #fff;
       overflow: hidden;
+      /* Жестко отключаем выделение текста и системные жесты, чтобы мультитач работал идеально */
       user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
     }
 
-    /* Главный контейнер */
+    /* Кнопка возврата в Hub */
+    .btn-return {
+      position: fixed; top: 10px; left: 10px; color: #555; text-decoration: none;
+      font-family: monospace; background: rgba(0,0,0,0.8); padding: 5px 10px;
+      border: 1px solid #333; z-index: 9999; font-size: 10px; letter-spacing: 1px;
+      transition: color 0.3s, border-color 0.3s;
+    }
+    .btn-return:hover { color: #fff; border-color: #666; }
+
+    /* Главный контейнер (Теперь гибкий) */
     .module-coop {
-      width: 600px;
+      width: 95%;
+      max-width: 600px;
       height: 350px;
       background: #111;
       border: 2px solid #333;
@@ -38,7 +51,6 @@
       overflow: hidden;
     }
 
-    /* Декоративная рамка ARG-терминала */
     .module-coop::before {
       content: 'MODULE_05 // SYNC_REQUIRED';
       position: absolute;
@@ -57,11 +69,12 @@
       justify-content: center;
       align-items: center;
       position: relative;
-      transition: all 0.3s ease;
+      transition: background 0.3s ease;
       background: #161618;
+      cursor: pointer; /* Показываем, что сюда можно кликать */
+      -webkit-tap-highlight-color: transparent; /* Убираем синее мерцание при тапе на Android */
     }
 
-    /* Линия раздела (Split Line) */
     .divider {
       position: absolute;
       top: 0;
@@ -74,15 +87,12 @@
       transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Стили для стороны Коди */
     .cody-side { border-right: 1px solid #000; }
     .cody-side .key-hint { color: var(--text-muted); border-color: var(--text-muted); }
 
-    /* Стили для стороны Мэй */
     .may-side { border-left: 1px solid #000; }
     .may-side .key-hint { color: var(--text-muted); border-color: var(--text-muted); }
 
-    /* Индикатор клавиши */
     .key-hint {
       width: 60px;
       height: 60px;
@@ -95,6 +105,7 @@
       font-weight: bold;
       margin-bottom: 20px;
       transition: all 0.2s ease;
+      pointer-events: none; /* Чтобы клик не перехватывался внутренними элементами */
     }
 
     .player-label {
@@ -103,101 +114,73 @@
       color: var(--text-muted);
       text-transform: uppercase;
       transition: color 0.3s;
+      pointer-events: none;
     }
 
     /* =========================================
-       СОСТОЯНИЕ: КНОПКА ЗАЖАТА (АКТИВНОСТЬ)
+       СОСТОЯНИЕ: КНОПКА ЗАЖАТА
        ========================================= */
-    .cody-side.active {
-      background: radial-gradient(circle at center, rgba(107, 194, 75, 0.15) 0%, #161618 70%);
-    }
+    .cody-side.active { background: radial-gradient(circle at center, rgba(107, 194, 75, 0.15) 0%, #161618 70%); }
     .cody-side.active .key-hint {
-      color: var(--cody-green);
-      border-color: var(--cody-green);
-      border-style: solid;
-      box-shadow: 0 0 20px rgba(107, 194, 75, 0.4);
-      transform: scale(0.95);
+      color: var(--cody-green); border-color: var(--cody-green); border-style: solid;
+      box-shadow: 0 0 20px rgba(107, 194, 75, 0.4); transform: scale(0.95);
     }
     .cody-side.active .player-label { color: var(--cody-green); }
 
-    .may-side.active {
-      background: radial-gradient(circle at center, rgba(232, 74, 95, 0.15) 0%, #161618 70%);
-    }
+    .may-side.active { background: radial-gradient(circle at center, rgba(232, 74, 95, 0.15) 0%, #161618 70%); }
     .may-side.active .key-hint {
-      color: var(--may-red);
-      border-color: var(--may-red);
-      border-style: solid;
-      box-shadow: 0 0 20px rgba(232, 74, 95, 0.4);
-      transform: scale(0.95);
+      color: var(--may-red); border-color: var(--may-red); border-style: solid;
+      box-shadow: 0 0 20px rgba(232, 74, 95, 0.4); transform: scale(0.95);
     }
     .may-side.active .player-label { color: var(--may-red); }
 
     /* =========================================
-       СОСТОЯНИЕ УСПЕХА (ОБЕ КНОПКИ ЗАЖАТЫ)
+       СОСТОЯНИЕ УСПЕХА (СИНХРОНИЗАЦИЯ)
        ========================================= */
     .success-overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(10, 10, 12, 0.95);
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease;
+      position: absolute; inset: 0; background: rgba(10, 10, 12, 0.95); z-index: 20;
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
     }
 
     .module-coop.synced .divider {
-      /* Линия раздела красиво расходится в стороны, открывая ответ */
-      width: 100%;
-      background: transparent;
-      border-left: 2px solid var(--cody-green);
-      border-right: 2px solid var(--may-red);
+      width: 100%; background: transparent;
+      border-left: 2px solid var(--cody-green); border-right: 2px solid var(--may-red);
       box-shadow: inset 20px 0 30px -20px var(--cody-green), inset -20px 0 30px -20px var(--may-red);
     }
 
-    .module-coop.synced .success-overlay {
-      opacity: 1;
-      pointer-events: all;
-      transition-delay: 0.3s;
-    }
+    .module-coop.synced .success-overlay { opacity: 1; pointer-events: all; transition-delay: 0.3s; }
 
     .result-letter {
-      font-size: 80px;
-      font-weight: bold;
-      color: #fff;
-      text-shadow: 0 0 20px rgba(255,255,255,0.5);
-      margin-bottom: 20px;
-      letter-spacing: 10px;
+      font-size: 80px; font-weight: bold; color: #fff; text-shadow: 0 0 20px rgba(255,255,255,0.5);
+      margin-bottom: 20px; letter-spacing: 10px;
     }
 
-    /* Та самая мрачная цитата */
     .dark-quote {
-      font-size: 14px;
-      color: #888;
-      font-style: italic;
-      letter-spacing: 2px;
-      text-align: center;
-      max-width: 80%;
-      line-height: 1.6;
-      /* Добавляем легкий глитч для пущего крипового эффекта */
-      animation: faint-glitch 3s infinite;
+      font-size: 14px; color: #888; font-style: italic; letter-spacing: 2px;
+      text-align: center; max-width: 80%; line-height: 1.6; animation: faint-glitch 3s infinite;
     }
-
-    .dark-quote span {
-      color: #a33;
-    }
+    .dark-quote span { color: #a33; }
 
     @keyframes faint-glitch {
       0%, 95%, 100% { opacity: 1; transform: translate(0); }
       96% { opacity: 0.8; transform: translate(-2px, 1px); }
       97% { opacity: 0.9; transform: translate(2px, -1px); }
     }
+
+    /* Адаптив для телефонов */
+    @media (max-width: 500px) {
+      .module-coop { height: 250px; }
+      .key-hint { width: 50px; height: 50px; font-size: 20px; }
+      .player-label { font-size: 10px; letter-spacing: 1px; }
+      .result-letter { font-size: 60px; margin-bottom: 10px; }
+      .dark-quote { font-size: 12px; }
+    }
   </style>
 </head>
 <body>
+
+  <a href="index.html" class="btn-return">◄ HUB</a>
 
   <div class="module-coop" id="coopModule">
     <div class="divider"></div>
@@ -225,53 +208,66 @@
     const maySide = document.getElementById('maySide');
     const coopModule = document.getElementById('coopModule');
 
-    // Состояние клавиш
-    let keys = {
-      c: false,
-      m: false
-    };
+    let keys = { c: false, m: false };
 
-    // Слушатель нажатия
-    window.addEventListener('keydown', (e) => {
-      // Игнорируем повторные срабатывания при удержании
-      if (e.repeat) return;
-
-      const key = e.key.toLowerCase();
-
-      if (key === 'c') {
-        keys.c = true;
-        codySide.classList.add('active');
-      }
-
-      if (key === 'm') {
-        keys.m = true;
-        maySide.classList.add('active');
-      }
-
-      // Если зажаты обе кнопки - магия сплит-скрина
+    // Функция проверки синхронизации
+    function checkSync() {
       if (keys.c && keys.m) {
         coopModule.classList.add('synced');
-      }
-    });
-
-    // Слушатель отпускания
-    window.addEventListener('keyup', (e) => {
-      const key = e.key.toLowerCase();
-
-      if (key === 'c') {
-        keys.c = false;
-        codySide.classList.remove('active');
-      }
-
-      if (key === 'm') {
-        keys.m = false;
-        maySide.classList.remove('active');
-      }
-
-      // Если хотя бы одну кнопку отпустили, разрываем синхронизацию
-      if (!keys.c || !keys.m) {
+      } else {
         coopModule.classList.remove('synced');
       }
+    }
+
+    /* =========================================
+       1. СЕНСОРНОЕ УПРАВЛЕНИЕ (ДЛЯ ТЕЛЕФОНОВ)
+       ========================================= */
+    codySide.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Предотвращаем скролл и симуляцию мыши
+      keys.c = true; codySide.classList.add('active'); checkSync();
+    });
+    codySide.addEventListener('touchend', (e) => {
+      e.preventDefault(); keys.c = false; codySide.classList.remove('active'); checkSync();
+    });
+    codySide.addEventListener('touchcancel', (e) => {
+      e.preventDefault(); keys.c = false; codySide.classList.remove('active'); checkSync();
+    });
+
+    maySide.addEventListener('touchstart', (e) => {
+      e.preventDefault(); keys.m = true; maySide.classList.add('active'); checkSync();
+    });
+    maySide.addEventListener('touchend', (e) => {
+      e.preventDefault(); keys.m = false; maySide.classList.remove('active'); checkSync();
+    });
+    maySide.addEventListener('touchcancel', (e) => {
+      e.preventDefault(); keys.m = false; maySide.classList.remove('active'); checkSync();
+    });
+
+    /* =========================================
+       2. УПРАВЛЕНИЕ МЫШЬЮ (ДЛЯ ПК)
+       ========================================= */
+    codySide.addEventListener('mousedown', () => { keys.c = true; codySide.classList.add('active'); checkSync(); });
+    maySide.addEventListener('mousedown', () => { keys.m = true; maySide.classList.add('active'); checkSync(); });
+
+    // Сброс при отпускании мыши в любом месте окна
+    window.addEventListener('mouseup', () => {
+      keys.c = false; keys.m = false;
+      codySide.classList.remove('active'); maySide.classList.remove('active');
+      checkSync();
+    });
+
+    /* =========================================
+       3. УПРАВЛЕНИЕ КЛАВИАТУРОЙ (АЛЬТЕРНАТИВА)
+       ========================================= */
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      if (e.key.toLowerCase() === 'c') { keys.c = true; codySide.classList.add('active'); checkSync(); }
+      if (e.key.toLowerCase() === 'm') { keys.m = true; maySide.classList.add('active'); checkSync(); }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key.toLowerCase() === 'c') { keys.c = false; codySide.classList.remove('active'); checkSync(); }
+      if (e.key.toLowerCase() === 'm') { keys.m = false; maySide.classList.remove('active'); checkSync(); }
     });
   </script>
 
