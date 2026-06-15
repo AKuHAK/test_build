@@ -183,7 +183,7 @@
       0%, 100% { filter: brightness(1); }
       30% { filter: brightness(4); }
     }
-    .bg-char.pulsing { animation: char-pulse 2s ease-out; }
+    .bg-char.pulsing { animation: char-pulse 2s ease-out 1; }
 
     #easterEggScreen {
       position: fixed; inset: 0; background: var(--bg-void); z-index: 20000;
@@ -301,6 +301,7 @@
   <script>
     const bootScreen = document.getElementById('bootScreen');
     const bgMusic = document.getElementById('bgMusic');
+    let bgCharPulseInterval = null;
 
     bootScreen.addEventListener('click', () => {
       bgMusic.volume = 0.5;
@@ -308,7 +309,7 @@
       bootScreen.style.opacity = '0';
       setTimeout(() => {
         bootScreen.style.display = 'none';
-        spawnEasterLetters();
+        bgCharPulseInterval = spawnEasterLetters();
       }, 2000);
     });
 
@@ -434,9 +435,11 @@
       }
 
       const availableDigits = digits.split('').filter(d => !usedChars.has(d));
-      const decoyDigit = availableDigits[Math.floor(Math.random() * availableDigits.length)];
-      itemsToSpawn.push({ char: decoyDigit, type: 'decoy' });
-      usedChars.add(decoyDigit);
+      if (availableDigits.length > 0) {
+        const decoyDigit = availableDigits[Math.floor(Math.random() * availableDigits.length)];
+        itemsToSpawn.push({ char: decoyDigit, type: 'decoy' });
+        usedChars.add(decoyDigit);
+      }
 
       const noisePool = [
         ...alphabet.split('').filter(c => !usedChars.has(c)),
@@ -472,13 +475,14 @@
         document.body.appendChild(span);
       });
 
-      setInterval(() => {
+      const pulseInterval = setInterval(() => {
         document.querySelectorAll('.bg-char:not(.found)').forEach(el => {
           el.classList.remove('pulsing');
           void el.offsetWidth;
           el.classList.add('pulsing');
         });
       }, 60000);
+      return pulseInterval;
     }
 
     function handleCharClick(spanElement, char, type) {
@@ -498,6 +502,7 @@
     }
 
     function triggerSystemCollapse() {
+      clearInterval(bgCharPulseInterval);
       document.getElementById('mainTerminal').style.display = 'none';
       document.querySelectorAll('.bg-char').forEach(el => el.style.display = 'none');
       document.getElementById('easterEggScreen').classList.add('active');
